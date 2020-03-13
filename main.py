@@ -18,17 +18,18 @@ from utils.metric import get_ner_fmeasure
 from model.seqlabel import SeqLabel
 from model.sentclassifier import SentClassifier
 from utils.data import Data
+import seaborn as sns
+import matplotlib.pyplot as plt
+
 
 try:
     import cPickle as pickle
 except ImportError:
     import pickle
 '''
-# -------------
 # Modifications by Denise Mak dpm3@uw.edu
 # Feb 2020
 #
-begin insertions
 '''
 # line 579 of main.py
 REALLY_TRAIN = False
@@ -37,15 +38,7 @@ TRAINED_FILE = 'test_data/lstmtestglove50.10.model'
 # TRAINED_FILE = 'sample_data/lstmGlovecrf.8.model'
 # TRAINED_FILE = 'sample_data/lstmGloveBIOcrf.9.model'
 
-def test_count_elements(tensor):
-    #(Variable(tensor).data).cpu().numpy()
-    np_list = tensor.data.cpu().numpy()
-    res = list(zip(*np.unique(np_list, return_counts=True)))
-    print("List of element counts: {}".format(res))
-'''
-end insertions
-'''
-# -------------
+
 seed_num = 42
 random.seed(seed_num)
 torch.manual_seed(seed_num)
@@ -217,10 +210,7 @@ def evaluate(data, model, name, nbest=None):
             tag_seq = nbest_tag_seq[:,:,0]
         else:
             tag_seq = model(batch_word, batch_features, batch_wordlen, batch_char, batch_charlen, batch_charrecover, mask)
-        # print("tag:",tag_seq)
-        # todo: remove debug helper function
-        # test_count_elements(tag_seq)
-        ''' check if printed count '''
+
 
         pred_label, gold_label = recover_label(tag_seq, batch_label, mask, data.label_alphabet, batch_wordrecover, data.sentence_classification)
         pred_results += pred_label
@@ -245,8 +235,7 @@ def evaluate(data, model, name, nbest=None):
         data.sensitivity_matrices.append(sensitivity_tag)
     sensitivity_combined = np.squeeze(np.stack([data.sensitivity_matrices]))
     data.sensitivity_matrices_combined.append(sensitivity_combined)
-    # TODO: actually return the sensitivity_combined and print out a heat map
-    return speed, acc, p, r, f, pred_results, pred_scores
+    return speed, acc, p, r, f, pred_results, pred_scores, sensitivity_combined
 
 
 def batchify_with_label(input_batch_list, gpu, if_train=True, sentence_classification=False):
@@ -418,7 +407,7 @@ def batchify_sentence_classification_with_label(input_batch_list, gpu, if_train=
         mask = mask.cuda()
     return word_seq_tensor,feature_seq_tensors, word_seq_lengths, word_seq_recover, char_seq_tensor, char_seq_lengths, char_seq_recover, label_seq_tensor, mask
 
-def load_model_to_test(data):
+def load_model_to_test(data, train=False, dev=True, test=False):
     print("Load pretrained model...")
     if data.sentence_classification:
         model = SentClassifier(data)
@@ -427,29 +416,38 @@ def load_model_to_test(data):
     model.load_state_dict(torch.load(TRAINED_FILE))
 
 
-    '''----------------TRAINING----------------'''
-    speed, acc, p, r, f, _,_ = evaluate(data, model, "train")
-    if data.seg:
-        current_score = f
-        print("Speed: %.2fst/s; acc: %.4f, p: %.4f, r: %.4f, f: %.4f"%(speed, acc, p, r, f))
-    else:
-        current_score = acc
-        print("Speed: %.2fst/s; acc: %.4f"%(speed, acc))
+    '''----------------TESTING----------------'''
+    if (train):
+        speed, acc, p, r, f, _,_ = evaluate(data, model, "train")
+        if data.seg:
+            current_score = f
+            print("Speed: %.2fst/s; acc: %.4f, p: %.4f, r: %.4f, f: %.4f"%(speed, acc, p, r, f))
+        else:
+            current_score = acc
+            print("Speed: %.2fst/s; acc: %.4f"%(speed, acc))
+
+    if (dev):
+        speed, acc, p, r, f, _,_, sensitivities = evaluate(data, model, "dev")
+        sensitivities = np.transpose(sensitivities)
+        sns.set()
+        # put sensititivites in heat map
+        ax = sns.heatmap(sensitivities)
+        plt.show()
 
 
-    speed, acc, p, r, f, _,_ = evaluate(data, model, "dev")
-    if data.seg:
-        current_score = f
-        print("Speed: %.2fst/s; acc: %.4f, p: %.4f, r: %.4f, f: %.4f"%(speed, acc, p, r, f))
-    else:
-        current_score = acc
-        print("Speed: %.2fst/s; acc: %.4f"%(speed, acc))
+        if data.seg:
+            current_score = f
+            print("Speed: %.2fst/s; acc: %.4f, p: %.4f, r: %.4f, f: %.4f"%(speed, acc, p, r, f))
+        else:
+            current_score = acc
+            print("Speed: %.2fst/s; acc: %.4f"%(speed, acc))
 
-    speed, acc, p, r, f, _,_ = evaluate(data, model, "test")
-    if data.seg:
-        print("Speed: %.2fst/s; acc: %.4f, p: %.4f, r: %.4f, f: %.4f"%(speed, acc, p, r, f))
-    else:
-        print("Speed: %.2fst/s; acc: %.4f"%(speed, acc))
+    if (test):
+        speed, acc, p, r, f, _,_ = evaluate(data, model, "test")
+        if data.seg:
+            print("Speed: %.2fst/s; acc: %.4f, p: %.4f, r: %.4f, f: %.4f"%(speed, acc, p, r, f))
+        else:
+            print("Speed: %.2fst/s; acc: %.4f"%(speed, acc))
     return
 
 
