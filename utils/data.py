@@ -21,6 +21,19 @@ PADDING = "</pad>"
 
 class Data:
     def __init__(self):
+        '''
+        Additions
+        '''
+        # can we store data here? if so, put statistics on sensitivity  here
+        self.iteration = 0
+        self.batch_contributions = []
+        self.tag_contributions = {}
+        self.tag_counts = {}
+        self.sensitivity_matrices = []
+
+        '''
+        End additions
+        '''
         self.sentence_classification = False
         self.MAX_SENTENCE_LENGTH = 250
         self.MAX_WORD_LENGTH = -1
@@ -323,7 +336,7 @@ class Data:
         else:
             print("Error: illegal name during writing predict result, name should be within train/dev/test/raw !")
         assert(sent_num == len(content_list))
-        fout = open(self.decode_dir,'w')
+        fout = open(self.decode_dir,'wb')
         for idx in range(sent_num):
             if self.sentence_classification:
                 fout.write(" ".join(content_list[idx][0])+"\t"+predict_results[idx]+ '\n')
@@ -331,7 +344,12 @@ class Data:
                 sent_length = len(predict_results[idx])
                 for idy in range(sent_length):
                     ## content_list[idx] is a list with [word, char, label]
-                    fout.write(content_list[idx][0][idy].encode('utf-8') + " " + predict_results[idx][idy] + '\n')
+                    try:
+                        # fout.write(content_list[idx][0][idy].encode('utf-8') + " " + predict_results[idx][idy] + b'\n')
+                        fout.write(content_list[idx][0][idy] + " " + predict_results[idx][idy] + b'\n')
+                    except:
+                        print("content_list[idx][0][idy]={}, predict_results={}".format(content_list[idx][0][idy],
+                                                                                        predict_results[idx][idy]))
                 fout.write('\n')
         fout.close()
         print("Predict %s result has been written into file. %s"%(name, self.decode_dir))

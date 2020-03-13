@@ -8,6 +8,8 @@ from __future__ import absolute_import
 import sys
 import numpy as np
 
+
+
 def normalize_word(word):
     new_word = ""
     for char in word:
