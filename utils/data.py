@@ -30,7 +30,9 @@ class Data:
         self.tag_contributions = {}
         self.tag_counts = {}
         self.sensitivity_matrices = []
+
         self.sensitivity_matrices_combined = []
+
         '''
         End additions
         '''

@@ -18,8 +18,10 @@ from utils.metric import get_ner_fmeasure
 from model.seqlabel import SeqLabel
 from model.sentclassifier import SentClassifier
 from utils.data import Data
+
 import seaborn as sns
 import matplotlib.pyplot as plt
+
 
 
 try:
@@ -158,14 +160,18 @@ def get_sensitivity_matrix(label):
     # data.tag_contributions[0]  # this SHOULD be zero for masked label
     sum_other_contributions = np.zeros((10, 50))# data.tag_contributions[0]  # this will be zero for masked label
     for l in data.tag_counts:
+
         if l != label and l != 0:  #  if l != label:
+
             #  WAS if l != label and l != 0:, but if sum_other_counts is bigger, the entire sensitivity is bigger
             sum_other_counts += data.tag_counts[l]
             sum_other_contributions += data.tag_contributions[l]
     avg_for_others = sum_other_contributions/sum_other_counts
+
     s_ij = avg_for_label - avg_for_others
     s_ij_label = s_ij[label]
     return s_ij_label  # was return s_ij
+
 
 def evaluate(data, model, name, nbest=None):
     print("EVALUATE file: {}, name={}".format(data.model_dir, name) )
@@ -212,6 +218,8 @@ def evaluate(data, model, name, nbest=None):
             tag_seq = model(batch_word, batch_features, batch_wordlen, batch_char, batch_charlen, batch_charrecover, mask)
 
 
+
+
         pred_label, gold_label = recover_label(tag_seq, batch_label, mask, data.label_alphabet, batch_wordrecover, data.sentence_classification)
         pred_results += pred_label
         gold_results += gold_label
@@ -223,6 +231,7 @@ def evaluate(data, model, name, nbest=None):
 
     ''' Added the following:'''
     print("TOTAL BATCH ITERATIONS: {}".format(data.iteration))
+
 
     for tag in sorted(data.tag_counts):
         if tag == 0:
@@ -236,6 +245,7 @@ def evaluate(data, model, name, nbest=None):
     sensitivity_combined = np.squeeze(np.stack([data.sensitivity_matrices]))
     data.sensitivity_matrices_combined.append(sensitivity_combined)
     return speed, acc, p, r, f, pred_results, pred_scores, sensitivity_combined
+
 
 
 def batchify_with_label(input_batch_list, gpu, if_train=True, sentence_classification=False):
@@ -407,13 +417,16 @@ def batchify_sentence_classification_with_label(input_batch_list, gpu, if_train=
         mask = mask.cuda()
     return word_seq_tensor,feature_seq_tensors, word_seq_lengths, word_seq_recover, char_seq_tensor, char_seq_lengths, char_seq_recover, label_seq_tensor, mask
 
+
 def load_model_to_test(data, train=False, dev=True, test=False):
+
     print("Load pretrained model...")
     if data.sentence_classification:
         model = SentClassifier(data)
     else:
         model = SeqLabel(data)
     model.load_state_dict(torch.load(TRAINED_FILE))
+
 
 
     '''----------------TESTING----------------'''
@@ -448,6 +461,7 @@ def load_model_to_test(data, train=False, dev=True, test=False):
             print("Speed: %.2fst/s; acc: %.4f, p: %.4f, r: %.4f, f: %.4f"%(speed, acc, p, r, f))
         else:
             print("Speed: %.2fst/s; acc: %.4f"%(speed, acc))
+
     return
 
 
