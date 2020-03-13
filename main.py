@@ -23,8 +23,28 @@ try:
     import cPickle as pickle
 except ImportError:
     import pickle
+'''
+# -------------
+# Modifications by Denise Mak dpm3@uw.edu
+# Feb 2020
+#
+begin insertions
+'''
+# line 579 of main.py
+REALLY_TRAIN = False
+TRAINED_FILE = 'test_data/lstmtest.9.model'  # "sample_data/lstmcrf.19.model"
+# TRAINED_FILE = 'sample_data/lstmGlovecrf.8.model'
+# TRAINED_FILE = 'sample_data/lstmGloveBIOcrf.9.model'
 
-
+def test_count_elements(tensor):
+    #(Variable(tensor).data).cpu().numpy()
+    np_list = tensor.data.cpu().numpy()
+    res = list(zip(*np.unique(np_list, return_counts=True)))
+    print("List of element counts: {}".format(res))
+'''
+end insertions
+'''
+# -------------
 seed_num = 42
 random.seed(seed_num)
 torch.manual_seed(seed_num)
@@ -70,6 +90,7 @@ def recover_label(pred_variable, gold_variable, mask_variable, label_alphabet, w
             mask_variable (batch_size, sent_len): mask variable
     """
     pred_variable = pred_variable[word_recover]
+    # print("reordered labels: {}".format(pred_variable))
     gold_variable = gold_variable[word_recover]
     mask_variable = mask_variable[word_recover]
     batch_size = gold_variable.size(0)
@@ -130,9 +151,27 @@ def lr_decay(optimizer, epoch, decay_rate, init_lr):
         param_group['lr'] = lr
     return optimizer
 
+def get_sensitivity_matrix(label):
+    '''
+    Given a tag like 4: (B-PER), return the sensitivity matrix
+    :param label:
+    :return:
+    '''
+    avg_for_label = data.tag_contributions[label]/data.tag_counts[label]
+    sum_other_counts = 0
 
+    # data.tag_contributions[0]  # this SHOULD be zero for masked label
+    sum_other_contributions = np.zeros((10, 50))# data.tag_contributions[0]  # this will be zero for masked label
+    for l in data.tag_counts:
+        if l != label:
+            #  WAS if l != label and l != 0:, but if sum_other_counts is bigger, the entire sensitivity is bigger
+            sum_other_counts += data.tag_counts[l]
+            sum_other_contributions += data.tag_contributions[l]
+    avg_for_others = sum_other_contributions/sum_other_counts
+    return avg_for_label - avg_for_others
 
 def evaluate(data, model, name, nbest=None):
+    print("EVALUATE file: {}, name={}".format(data.model_dir, name) )
     if name == "train":
         instances = data.train_Ids
     elif name == "dev":
@@ -175,6 +214,10 @@ def evaluate(data, model, name, nbest=None):
         else:
             tag_seq = model(batch_word, batch_features, batch_wordlen, batch_char, batch_charlen, batch_charrecover, mask)
         # print("tag:",tag_seq)
+        # todo: remove debug helper function
+        # test_count_elements(tag_seq)
+        ''' check if printed count '''
+
         pred_label, gold_label = recover_label(tag_seq, batch_label, mask, data.label_alphabet, batch_wordrecover, data.sentence_classification)
         pred_results += pred_label
         gold_results += gold_label
@@ -183,6 +226,16 @@ def evaluate(data, model, name, nbest=None):
     acc, p, r, f = get_ner_fmeasure(gold_results, pred_results, data.tagScheme)
     if nbest and not data.sentence_classification:
         return speed, acc, p, r, f, nbest_pred_results, pred_scores
+
+    ''' Added the following:'''
+    print("TOTAL BATCH ITERATIONS: {}".format(data.iteration))
+    for tag in sorted(data.tag_counts):
+        if tag == 0:
+            print("Null tag {}: {} instances.".format(data.label_alphabet.get_instance(tag), data.tag_counts[tag]))
+        else:
+            print("Tag {}: {} instances.".format(data.label_alphabet.get_instance(tag), data.tag_counts[tag]))
+        data.sensitivity_matrices.append(get_sensitivity_matrix(tag))
+        # TODO: get important slice out of each sensitivity matrix
     return speed, acc, p, r, f, pred_results, pred_scores
 
 
@@ -225,7 +278,10 @@ def batchify_sequence_labeling_with_label(input_batch_list, gpu, if_train=True):
     feature_seq_tensors = []
     for idx in range(feature_num):
         feature_seq_tensors.append(torch.zeros((batch_size, max_seq_len),requires_grad =  if_train).long())
-    mask = torch.zeros((batch_size, max_seq_len), requires_grad =  if_train).byte()
+    # '
+    ''' 517 '''
+    # mask = torch.zeros((batch_size, max_seq_len), requires_grad =  if_train).byte()
+    mask = torch.zeros((batch_size, max_seq_len), requires_grad=if_train).bool()
     for idx, (seq, label, seqlen) in enumerate(zip(words, labels, word_seq_lengths)):
         seqlen = seqlen.item()
         word_seq_tensor[idx, :seqlen] = torch.LongTensor(seq)
@@ -304,7 +360,10 @@ def batchify_sentence_classification_with_label(input_batch_list, gpu, if_train=
     feature_seq_tensors = []
     for idx in range(feature_num):
         feature_seq_tensors.append(torch.zeros((batch_size, max_seq_len),requires_grad =  if_train).long())
-    mask = torch.zeros((batch_size, max_seq_len), requires_grad =  if_train).byte()
+
+    ''' 517 '''
+    # mask = torch.zeros((batch_size, max_seq_len), requires_grad =  if_train).byte()
+    mask = torch.zeros((batch_size, max_seq_len), requires_grad =  if_train).bool()
     label_seq_tensor = torch.LongTensor(labels)
     # exit(0)
     for idx, (seq,  seqlen) in enumerate(zip(words,  word_seq_lengths)):
@@ -349,7 +408,39 @@ def batchify_sentence_classification_with_label(input_batch_list, gpu, if_train=
         mask = mask.cuda()
     return word_seq_tensor,feature_seq_tensors, word_seq_lengths, word_seq_recover, char_seq_tensor, char_seq_lengths, char_seq_recover, label_seq_tensor, mask
 
+def load_model_to_test(data):
+    print("Load pretrained model...")
+    if data.sentence_classification:
+        model = SentClassifier(data)
+    else:
+        model = SeqLabel(data)
+    model.load_state_dict(torch.load(TRAINED_FILE))
 
+
+    '''----------------TRAINING----------------'''
+    speed, acc, p, r, f, _,_ = evaluate(data, model, "train")
+    if data.seg:
+        current_score = f
+        print("Speed: %.2fst/s; acc: %.4f, p: %.4f, r: %.4f, f: %.4f"%(speed, acc, p, r, f))
+    else:
+        current_score = acc
+        print("Speed: %.2fst/s; acc: %.4f"%(speed, acc))
+
+
+    speed, acc, p, r, f, _,_ = evaluate(data, model, "dev")
+    if data.seg:
+        current_score = f
+        print("Speed: %.2fst/s; acc: %.4f, p: %.4f, r: %.4f, f: %.4f"%(speed, acc, p, r, f))
+    else:
+        current_score = acc
+        print("Speed: %.2fst/s; acc: %.4f"%(speed, acc))
+
+    speed, acc, p, r, f, _,_ = evaluate(data, model, "test")
+    if data.seg:
+        print("Speed: %.2fst/s; acc: %.4f, p: %.4f, r: %.4f, f: %.4f"%(speed, acc, p, r, f))
+    else:
+        print("Speed: %.2fst/s; acc: %.4f"%(speed, acc))
+    return
 
 
 def train(data):
@@ -473,7 +564,7 @@ def train(data):
 
 
 def load_model_decode(data, name):
-    print("Load Model from file: ", data.model_dir)
+    print("Load Model from file: {}, name={}".format(data.model_dir, name) )
     if data.sentence_classification:
         model = SentClassifier(data)
     else:
@@ -551,7 +642,10 @@ if __name__ == '__main__':
         data.generate_instance('dev')
         data.generate_instance('test')
         data.build_pretrain_emb()
-        train(data)
+        if REALLY_TRAIN:
+            train(data)
+        else:
+            load_model_to_test(data)
     elif status == 'decode':
         print("MODEL: decode")
         data.load(data.dset_dir)

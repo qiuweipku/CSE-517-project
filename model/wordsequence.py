@@ -10,11 +10,15 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 from .wordrep import WordRep
+import numpy as np # for np.multiply
 
 class WordSequence(nn.Module):
     def __init__(self, data):
         super(WordSequence, self).__init__()
         print("build word sequence feature extractor: %s..."%(data.word_feature_extractor))
+        '''Additions'''
+        self.data = data
+        '''End Additions'''
         self.gpu = data.HP_gpu
         self.use_char = data.use_char
         # self.batch_size = data.HP_batch_size
@@ -104,12 +108,29 @@ class WordSequence(nn.Module):
             packed_words = pack_padded_sequence(word_represent, word_seq_lengths.cpu().numpy(), True)
             hidden = None
             lstm_out, hidden = self.lstm(packed_words, hidden)
+            #
             lstm_out, _ = pad_packed_sequence(lstm_out)
+            ''' EDITED BELOW'''
+            # np_lstm_out = lstm_out.cpu().detach().numpy()
+            np_lstm_out_trans = lstm_out.transpose(1,0).cpu().detach().numpy()
             ## lstm_out (seq_len, seq_len, hidden_size)
             feature_out = self.droplstm(lstm_out.transpose(1,0))
         ## feature_out (batch_size, seq_len, hidden_size)
         outputs = self.hidden2tag(feature_out)
+
+        ''' EDITED BELOW'''
+        np_weights = self.hidden2tag.weight.cpu().detach().numpy()
+        self.data.iteration += 1  # counts number of batches
+
+        # SAVE CONTRIBUTIONS FOR THIS BATCH
+        self.data.batch_contributions = [[np.multiply(
+            np_weights, np_lstm_out_trans[i][j])
+                for j in range(len(np_lstm_out_trans[i]))] for i in range(len(np_lstm_out_trans))]
+
+        flat_lstm_out = lstm_out.view(word_inputs.size(0) * max(word_seq_lengths), -1)
+        # contributions_2 = self.hidden2tag.weight * flat_lstm_out
         return outputs
+
 
     def sentence_representation(self, word_inputs, feature_inputs, word_seq_lengths, char_inputs, char_seq_lengths, char_seq_recover):
         """
