@@ -6,6 +6,8 @@
 
 
 Here is a sensitivity heatmap for 50 neurons and nine BIO labels (may not have correct values yet). It was generated in `main.py`.
+
+
 ![NCRF++ Logo](https://github.com/qiuweipku/CSE-517-project/blob/master/readme/heatmap.png)
 
 Most of the codebase is from NCRF++: An Open-source Neural Sequence Labeling Toolkit. The reference for it follows:
