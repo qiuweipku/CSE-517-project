@@ -32,7 +32,8 @@ begin insertions
 '''
 # line 579 of main.py
 REALLY_TRAIN = False
-TRAINED_FILE = 'test_data/lstmtest.9.model'  # "sample_data/lstmcrf.19.model"
+TRAINED_FILE = 'test_data/lstmtestglove50.10.model'
+# "sample_data/lstmcrf.19.model"
 # TRAINED_FILE = 'sample_data/lstmGlovecrf.8.model'
 # TRAINED_FILE = 'sample_data/lstmGloveBIOcrf.9.model'
 
@@ -157,18 +158,21 @@ def get_sensitivity_matrix(label):
     :param label:
     :return:
     '''
+
     avg_for_label = data.tag_contributions[label]/data.tag_counts[label]
     sum_other_counts = 0
 
     # data.tag_contributions[0]  # this SHOULD be zero for masked label
     sum_other_contributions = np.zeros((10, 50))# data.tag_contributions[0]  # this will be zero for masked label
     for l in data.tag_counts:
-        if l != label:
+        if l != label and l != 0:  #  if l != label:
             #  WAS if l != label and l != 0:, but if sum_other_counts is bigger, the entire sensitivity is bigger
             sum_other_counts += data.tag_counts[l]
             sum_other_contributions += data.tag_contributions[l]
     avg_for_others = sum_other_contributions/sum_other_counts
-    return avg_for_label - avg_for_others
+    s_ij = avg_for_label - avg_for_others
+    s_ij_label = s_ij[label]
+    return s_ij_label  # was return s_ij
 
 def evaluate(data, model, name, nbest=None):
     print("EVALUATE file: {}, name={}".format(data.model_dir, name) )
@@ -229,13 +233,19 @@ def evaluate(data, model, name, nbest=None):
 
     ''' Added the following:'''
     print("TOTAL BATCH ITERATIONS: {}".format(data.iteration))
+
     for tag in sorted(data.tag_counts):
         if tag == 0:
-            print("Null tag {}: {} instances.".format(data.label_alphabet.get_instance(tag), data.tag_counts[tag]))
+            print("Null tag {}: {} instances.".format('0', data.tag_counts[tag]))
         else:
             print("Tag {}: {} instances.".format(data.label_alphabet.get_instance(tag), data.tag_counts[tag]))
-        data.sensitivity_matrices.append(get_sensitivity_matrix(tag))
-        # TODO: get important slice out of each sensitivity matrix
+        sensitivity_tag = get_sensitivity_matrix(tag)
+
+
+        data.sensitivity_matrices.append(sensitivity_tag)
+    sensitivity_combined = np.squeeze(np.stack([data.sensitivity_matrices]))
+    data.sensitivity_matrices_combined.append(sensitivity_combined)
+    # TODO: actually return the sensitivity_combined and print out a heat map
     return speed, acc, p, r, f, pred_results, pred_scores
 
 
