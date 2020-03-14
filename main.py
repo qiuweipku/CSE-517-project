@@ -300,6 +300,7 @@ def evaluate(data, model, name, nbest=None, print_tag_counts=False):
 
     ''' Get per-tag sensitivity '''
     print("TOTAL BATCH ITERATIONS: {}".format(data.iteration))
+    sensitivity_matrices = []  # This will hold a row for each tag's sensitivity
     for tag in sorted(data.tag_counts):
         if print_tag_counts:
             if tag == 0:
@@ -307,11 +308,12 @@ def evaluate(data, model, name, nbest=None, print_tag_counts=False):
             else:
                 print("Tag {}: {} instances.".format(data.label_alphabet.get_instance(tag), data.tag_counts[tag]))
         sensitivity_tag = get_sensitivity_matrix(tag)
+        sensitivity_matrices.append(sensitivity_tag)
 
-        data.sensitivity_matrices.append(sensitivity_tag)
-    sensitivity_combined = np.squeeze(np.stack([data.sensitivity_matrices]))
-    # TODO: the following line will stack multiple models'
-    data.sensitivity_matrices_combined.append(sensitivity_combined)
+    sensitivity_combined = np.squeeze(np.stack([sensitivity_matrices]))
+    # TODO: the following line would stack multiple models' sensitivity,
+    # but we don't need it unless running many different models for stats
+    # data.sensitivity_matrices_combined.append(sensitivity_combined)
     return speed, acc, p, r, f, pred_results, pred_scores, sensitivity_combined
 
 
