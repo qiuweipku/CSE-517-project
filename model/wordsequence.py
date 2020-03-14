@@ -108,8 +108,13 @@ class WordSequence(nn.Module):
             packed_words = pack_padded_sequence(word_represent, word_seq_lengths.cpu().numpy(), True)
             hidden = None
             lstm_out, hidden = self.lstm(packed_words, hidden)
-            #
             lstm_out, _ = pad_packed_sequence(lstm_out)
+            ''' 
+            To ablate a neuron, can we do this?:       '''
+            ablate_list_b_loc = [17]    # First 5 most important: [17, 44, 16, 41, 22]
+            for neuron_index in ablate_list_b_loc:
+                self.lstm.weight_hh_l0[:, neuron_index] = 0
+
             ''' EDITED BELOW'''
             # np_lstm_out = lstm_out.cpu().detach().numpy()
             np_lstm_out_trans = lstm_out.transpose(1,0).cpu().detach().numpy()

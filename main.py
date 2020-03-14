@@ -70,7 +70,7 @@ def importance_matrix(sensitivities):
     del(x_tick[0])
     ax = sns.heatmap(important_nps, annot=True, xticklabels=x_tick,
                      cmap=ListedColormap(['white']), cbar=False, yticklabels=False,
-                     linecolor='gray', linewidths=0.5)
+                     linecolor='gray', linewidths=0.4)
     title = "Importance rankings of neurons per tag"
     plt.title(title, fontsize=18)
     ttl = ax.title
