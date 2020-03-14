@@ -1,9 +1,11 @@
 
 
 
-# CSE 517 project
+# Replication of "What Part of the Neural Network Does This"
 
+We're working on a replication of results from the following paper:
 
+> Xin, J., Lin, J., & Yu, Y. (2019, November). What Part of the Neural Network Does This? Understanding LSTMs by Measuring and Dissecting Neurons. In Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing and the 9th International Joint Conference on Natural Language Processing (EMNLP-IJCNLP) (pp. 5827-5834).
 
 Here is a sensitivity heatmap for 50 neurons and nine BIO labels (may not have correct values yet - investigating if we have bug). It was generated in `heatmap_sensitivity()` in `main.py`.
 
@@ -27,6 +29,12 @@ The axes of the heatmaps list the NER tags that the model was trying to label. T
 	I-ORG: 0.6125166444740346
 	I-PER: 0.9563886763580719
 	O: 0.995927770279704
+
+# Importance ranking of neurons
+Using the sensitivity matrix shown in the heatmap, we can determine the importance ranking of the each neuron and list them from most to least important.
+
+![Importance ranking](readme/importance.png)
+
 # About the framework we used
 
 Most of the codebase is from NCRF++: An Open-source Neural Sequence Labeling Toolkit. The reference for it follows.
