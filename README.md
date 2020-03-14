@@ -1,9 +1,11 @@
 
 
 
-# CSE 517 project
+# Replication of "What Part of the Neural Network Does This"
 
+We're working on a replication of results from the following paper:
 
+> Xin, J., Lin, J., & Yu, Y. (2019, November). What Part of the Neural Network Does This? Understanding LSTMs by Measuring and Dissecting Neurons. In Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing and the 9th International Joint Conference on Natural Language Processing (EMNLP-IJCNLP) (pp. 5827-5834).
 
 Here is a sensitivity heatmap for 50 neurons and nine BIO labels (may not have correct values yet - investigating if we have bug). It was generated in `heatmap_sensitivity()` in `main.py`.
 
