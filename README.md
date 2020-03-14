@@ -27,6 +27,12 @@ The axes of the heatmaps list the NER tags that the model was trying to label. T
 	I-ORG: 0.6125166444740346
 	I-PER: 0.9563886763580719
 	O: 0.995927770279704
+
+# Importance ranking of neurons
+Using the sensitivity matrix shown in the heatmap, we can determine the importance ranking of the each neuron and list them from most to least important.
+
+![Importance ranking](readme/importance.png)
+
 # About the framework we used
 
 Most of the codebase is from NCRF++: An Open-source Neural Sequence Labeling Toolkit. The reference for it follows.
