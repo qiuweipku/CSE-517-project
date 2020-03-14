@@ -11,7 +11,7 @@ Here is a sensitivity heatmap for 50 neurons and nine BIO labels (may not have c
 
 If you change the random seed (find `seed_num = 42` in `main.py`, change it and train another model), you'll get a different heatmap. Here's the heatmap for a model with the same parameters but a different random seed as the previous one:
 
-![Example heatmap](readme/heatmap.png)
+![Example heatmap](readme/heatmap2.png)
 
 Notice that it's different, and the range of values may be different. But there are some similarities too.
 
