@@ -125,6 +125,8 @@ class Data:
 
         ## sensitivity testing
         self.test_name = None
+        self.ablate_list = []
+        self.ablate_num = []
 
     def show_data_summary(self):
         

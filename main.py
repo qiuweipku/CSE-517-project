@@ -21,6 +21,7 @@ from utils.data import Data
 
 import seaborn as sns
 import matplotlib.pyplot as plt
+from matplotlib.colors import ListedColormap
 
 
 
@@ -35,6 +36,50 @@ seed_num = 42
 random.seed(seed_num)
 torch.manual_seed(seed_num)
 np.random.seed(seed_num)
+
+def importance_matrix(sensitivities):
+    '''
+    Builds a matrix of tag sensitivities
+    :param sensitivities: This is a matrix of [num_tags, num_neurons],
+    which is [10 x 50] in our experimental configuration.
+    :return:
+    '''
+
+    important_lists = []
+    important_nps = np.zeros(50, dtype=int)
+    sensitivities = sensitivities[1:]  # omit padding tag
+    for i in range(len(sensitivities)):
+        important_list = []
+        important_np = np.zeros(50, dtype=int)
+        tag_sensitivity_row = sensitivities[i]
+        for j in range(len(tag_sensitivity_row)):
+            most_important = np.argmax(tag_sensitivity_row)
+            important_list.append(most_important)
+            important_np[j] = most_important
+            index = [most_important]
+            tag_sensitivity_row[most_important] = np.NINF
+        important_lists.append(important_list)
+        important_nps = np.vstack((important_nps, important_np))
+
+    important_nps = np.delete(important_nps, 0, axis=0)
+    important_nps = np.transpose(important_nps)
+    sns.set()
+    # Smaller than normal fonts
+    sns.set(font_scale=0.5)
+    x_tick = [data.label_alphabet.get_instance(tag) for tag in sorted(data.tag_counts)]
+    del(x_tick[0])
+    ax = sns.heatmap(important_nps, annot=True, xticklabels=x_tick,
+                     cmap=ListedColormap(['white']), cbar=False, yticklabels=False,
+                     linecolor='gray', linewidths=0.5)
+    title = "Importance rankings of neurons per tag"
+    plt.title(title, fontsize=18)
+    ttl = ax.title
+    ttl.set_position([0.5, 1.05])
+    plt.show()
+    ax.figure.savefig("ImportanceRankings.png")
+    for i, l in enumerate(important_lists):
+        print ("importance rankings for tag {}: {}".format(i, l))
+    return important_nps
 
 def heatmap_sensitivity(sensitivities,
                         modelname=DEFAULT_TRAINED_FILE,
@@ -197,7 +242,7 @@ def lr_decay(optimizer, epoch, decay_rate, init_lr):
 
 
 
-def evaluate(data, model, name, nbest=None):
+def evaluate(data, model, name, nbest=None, print_tag_counts=False):
     print("EVALUATE file: {}, name={}".format(data.model_dir, name) )
     if name == "train":
         instances = data.train_Ids
@@ -253,20 +298,19 @@ def evaluate(data, model, name, nbest=None):
     if nbest and not data.sentence_classification:
         return speed, acc, p, r, f, nbest_pred_results, pred_scores
 
-    ''' Added the following:'''
+    ''' Get per-tag sensitivity '''
     print("TOTAL BATCH ITERATIONS: {}".format(data.iteration))
-
-
     for tag in sorted(data.tag_counts):
-        if tag == 0:
-            print("Padding {}: {} instances.".format('0', data.tag_counts[tag]))
-        else:
-            print("Tag {}: {} instances.".format(data.label_alphabet.get_instance(tag), data.tag_counts[tag]))
+        if print_tag_counts:
+            if tag == 0:
+                print("Padding {}: {} instances.".format('0', data.tag_counts[tag]))
+            else:
+                print("Tag {}: {} instances.".format(data.label_alphabet.get_instance(tag), data.tag_counts[tag]))
         sensitivity_tag = get_sensitivity_matrix(tag)
-
 
         data.sensitivity_matrices.append(sensitivity_tag)
     sensitivity_combined = np.squeeze(np.stack([data.sensitivity_matrices]))
+    # TODO: the following line will stack multiple models'
     data.sensitivity_matrices_combined.append(sensitivity_combined)
     return speed, acc, p, r, f, pred_results, pred_scores, sensitivity_combined
 
@@ -443,6 +487,14 @@ def batchify_sentence_classification_with_label(input_batch_list, gpu, if_train=
 
 
 def load_model_to_test(data, train=False, dev=True, test=False):
+    '''
+    Set any ONE of train, dev, test to true, in order to evaluate on that set.
+    :param data:
+    :param train:
+    :param dev: Default set to test, because that was what the original experiment did
+    :param test:
+    :return:
+    '''
 
     print("Load pretrained model...")
     if data.sentence_classification:
@@ -467,6 +519,7 @@ def load_model_to_test(data, train=False, dev=True, test=False):
     if (dev):
         speed, acc, p, r, f, _,_, sensitivities = evaluate(data, model, "dev")
         heatmap_sensitivity(sensitivities, data.pretrained_model_path, testname="dev")
+        importance_matrix(sensitivities)
 
 
         if data.seg:
@@ -657,7 +710,9 @@ if __name__ == '__main__':
     parser.add_argument('--loadmodel')
     parser.add_argument('--output')
     parser.add_argument('--loadtotest', help='Load the model just to test it')
-    parser.add_argument('--pretrainedmodelpath', help='Path to a pretrained model that you just want to test', default=DEFAULT_TRAINED_FILE)
+    parser.add_argument('--pretrainedmodelpath', help='Path to a pretrained model that you just want to test',
+                        default=DEFAULT_TRAINED_FILE)
+    parser.add_argument('--ablate') # indicate which neurons to ablate
 
     args = parser.parse_args()
     data = Data()

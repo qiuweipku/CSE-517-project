@@ -23,10 +23,10 @@ def get_per_tag_accuracy(expected_tag_counts, actual_tag_counts, sort=False):
         per_tag_acc[tag] = actual_tag_counts[tag]/expected_tag_counts[tag]
     if sort:
         for tag in sorted(per_tag_acc):
-            print("\t{}: {}".format(tag, per_tag_acc[tag]))
+            print("\t{}: {:.3f}".format(tag, per_tag_acc[tag]))
     else:
         for tag in per_tag_acc:
-            print("\t{}: {}".format(tag, per_tag_acc[tag]))
+            print("\t{}: {:.3f}".format(tag, per_tag_acc[tag]))
     return per_tag_acc
 
 ## input as sentence level labels
