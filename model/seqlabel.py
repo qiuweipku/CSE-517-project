@@ -66,16 +66,15 @@ class SeqLabel(nn.Module):
 
     def update_tag_contribution(self, contribution_matrix, tag):
         if tag == 0:
-
-            if contribution_matrix[0][0] != 0:
-                # TODO: Fix this to get the max and min and compare to zero
-
-                print("contribution matrix should have zeros for zero tag")
+            if np.max(contribution_matrix[0]) > 0:
+                print("contribution matrix should have zeros for zero tag: {}".format(
+                    contribution_matrix[0]
+                ))
 
         if tag not in self.data.tag_contributions:
             if tag != 0:
                 self.data.tag_contributions[tag] = contribution_matrix
-            else:
+            else: # 0
                 self.data.tag_contributions[0] = np.zeros((10, 50))
             self.data.tag_counts[tag] = 1
         else:

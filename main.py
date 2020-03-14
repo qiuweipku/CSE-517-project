@@ -28,24 +28,69 @@ try:
     import cPickle as pickle
 except ImportError:
     import pickle
-'''
-# Modifications by Denise Mak dpm3@uw.edu
-# Feb 2020
-#
-'''
-# line 579 of main.py
-REALLY_TRAIN = False
-# TRAINED_FILE = 'test_data/lstmtestglove50.10.model'
-TRAINED_FILE = 'test_data/lstmtest.9.model'
-# "sample_data/lstmcrf.19.model"
-# TRAINED_FILE = 'sample_data/lstmGlovecrf.8.model'
-# TRAINED_FILE = 'sample_data/lstmGloveBIOcrf.9.model'
 
+DEFAULT_TRAINED_FILE = 'test_data/lstmtestglove50.9.model'
 
 seed_num = 42
 random.seed(seed_num)
 torch.manual_seed(seed_num)
 np.random.seed(seed_num)
+
+def heatmap_sensitivity(sensitivities,
+                        modelname=DEFAULT_TRAINED_FILE,
+                        testname="",
+                        show_pad=True, show_vals=True):
+    '''
+    Shows a heatmap for the sensitivity values.
+    :param sensitivities: This is a matrix of [num_tags, num_neurons],
+    which is [10 x 50] in our experimental configuration.
+    :return:
+    '''
+    # transpose to match chart in Figure 7. of paper
+    sensitivities = np.transpose(sensitivities)
+    # column 0 is the padding tag
+    start = 1
+    if show_pad:
+        start = 0
+    sensitivities = sensitivities[0:50, start:10]
+    sns.set()
+    # Smaller than normal fonts
+    sns.set(font_scale=0.5)
+    x_tick = [data.label_alphabet.get_instance(tag) for tag in sorted(data.tag_counts)]
+    if show_pad: x_tick[0] = 'PAD'
+    # put sensititivites in heat map
+    ax = sns.heatmap(sensitivities, xticklabels=x_tick, annot=show_vals, fmt=".2g")
+    title = "Model ({}): ".format(testname) + modelname
+    plt.title(title, fontsize=18)
+    ttl = ax.title
+    ttl.set_position([0.5, 1.05])
+    plt.show()
+    ax.figure.savefig(modelname+"_heatmap.png")
+
+def get_sensitivity_matrix(label, debug=True):
+    '''
+    Given a tag like 4: (B-PER), return the sensitivity matrix
+    :param label:
+    :return:
+    '''
+
+    avg_for_label = data.tag_contributions[label]/data.tag_counts[label]
+    sum_other_counts = 0
+
+    # data.tag_contributions[0]  # this SHOULD be zero for masked label
+    sum_other_contributions = np.zeros((10, 50))# data.tag_contributions[0]  # this will be zero for masked label
+    for l in data.tag_counts:
+
+        if l != label and l != 0:  #  if l != label:
+
+            #  WAS if l != label and l != 0:, but if sum_other_counts is bigger, the entire sensitivity is bigger
+            sum_other_counts += data.tag_counts[l]
+            sum_other_contributions += data.tag_contributions[l]
+    avg_for_others = sum_other_contributions/sum_other_counts
+
+    s_ij = avg_for_label - avg_for_others
+    s_ij_label = s_ij[label]
+    return s_ij_label  # was return s_ij
 
 
 def data_initialization(data):
@@ -148,51 +193,7 @@ def lr_decay(optimizer, epoch, decay_rate, init_lr):
         param_group['lr'] = lr
     return optimizer
 
-def heatmap_sensitivity(sensitivities):
-    '''
-    Shows a heatmap for the sensitivity values.
-    :param sensitivities: This is a matrix of [num_tags, num_neurons],
-    which is [10 x 50] in our experimental configuration.
-    :return:
-    '''
-    # transpose to match chart in Figure 7. of paper
-    sensitivities = np.transpose(sensitivities)
-    # column 0 is the padding tag
-    sensitivities = sensitivities[0:50, 1:10]
-    sns.set()
-    # put sensititivites in heat map
-    ax = sns.heatmap(sensitivities)
-    title = "Model: " + TRAINED_FILE
-    plt.title(title, fontsize=18)
-    ttl = ax.title
-    ttl.set_position([0.5, 1.05])
-    plt.show()
-    ax.figure.savefig(TRAINED_FILE+"_heatmap.png")
 
-def get_sensitivity_matrix(label):
-    '''
-    Given a tag like 4: (B-PER), return the sensitivity matrix
-    :param label:
-    :return:
-    '''
-
-    avg_for_label = data.tag_contributions[label]/data.tag_counts[label]
-    sum_other_counts = 0
-
-    # data.tag_contributions[0]  # this SHOULD be zero for masked label
-    sum_other_contributions = np.zeros((10, 50))# data.tag_contributions[0]  # this will be zero for masked label
-    for l in data.tag_counts:
-
-        if l != label and l != 0:  #  if l != label:
-
-            #  WAS if l != label and l != 0:, but if sum_other_counts is bigger, the entire sensitivity is bigger
-            sum_other_counts += data.tag_counts[l]
-            sum_other_contributions += data.tag_contributions[l]
-    avg_for_others = sum_other_contributions/sum_other_counts
-
-    s_ij = avg_for_label - avg_for_others
-    s_ij_label = s_ij[label]
-    return s_ij_label  # was return s_ij
 
 
 def evaluate(data, model, name, nbest=None):
@@ -447,13 +448,14 @@ def load_model_to_test(data, train=False, dev=True, test=False):
         model = SentClassifier(data)
     else:
         model = SeqLabel(data)
-    model.load_state_dict(torch.load(TRAINED_FILE))
+    model.load_state_dict(torch.load(data.pretrained_model_path))
 
 
 
     '''----------------TESTING----------------'''
     if (train):
-        speed, acc, p, r, f, _,_ = evaluate(data, model, "train")
+        speed, acc, p, r, f, _,_, train_sensitivities = evaluate(data, model, "train")
+        heatmap_sensitivity(train_sensitivities, data.pretrained_model_path, testname="train")
         if data.seg:
             current_score = f
             print("Speed: %.2fst/s; acc: %.4f, p: %.4f, r: %.4f, f: %.4f"%(speed, acc, p, r, f))
@@ -463,7 +465,7 @@ def load_model_to_test(data, train=False, dev=True, test=False):
 
     if (dev):
         speed, acc, p, r, f, _,_, sensitivities = evaluate(data, model, "dev")
-        heatmap_sensitivity(sensitivities)
+        heatmap_sensitivity(sensitivities, data.pretrained_model_path, testname="dev")
 
 
         if data.seg:
@@ -572,7 +574,8 @@ def train(data):
             print("ERROR: LOSS EXPLOSION (>1e8) ! PLEASE SET PROPER PARAMETERS AND STRUCTURE! EXIT....")
             exit(1)
         # continue
-        speed, acc, p, r, f, _,_ = evaluate(data, model, "dev")
+        speed, acc, p, r, f, _,_ , sensitivities = evaluate(data, model, "dev")
+
         dev_finish = time.time()
         dev_cost = dev_finish - epoch_finish
 
@@ -593,7 +596,9 @@ def train(data):
             torch.save(model.state_dict(), model_name)
             best_dev = current_score
         # ## decode test
-        speed, acc, p, r, f, _,_ = evaluate(data, model, "test")
+        speed, acc, p, r, f, _,_ , sensitivities = evaluate(data, model, "test")
+
+
         test_finish = time.time()
         test_cost = test_finish - dev_finish
         if data.seg:
@@ -649,7 +654,9 @@ if __name__ == '__main__':
     parser.add_argument('--seg', default="True") 
     parser.add_argument('--raw') 
     parser.add_argument('--loadmodel')
-    parser.add_argument('--output') 
+    parser.add_argument('--output')
+    parser.add_argument('--loadtotest', help='Load the model just to test it')
+    parser.add_argument('--pretrainedmodelpath', help='Path to a pretrained model that you just want to test', default=DEFAULT_TRAINED_FILE)
 
     args = parser.parse_args()
     data = Data()
@@ -671,6 +678,9 @@ if __name__ == '__main__':
         print("Seed num:",seed_num)
     else:
         data.read_config(args.config)
+
+    # adding arg for pretrained model path
+    data.pretrained_model_path = args.pretrainedmodelpath
     # data.show_data_summary()
     status = data.status.lower()
     print("Seed num:",seed_num)
@@ -682,9 +692,11 @@ if __name__ == '__main__':
         data.generate_instance('dev')
         data.generate_instance('test')
         data.build_pretrain_emb()
-        if REALLY_TRAIN:
+        if not args.loadtotest:
+            print("Training model, not just testing because --loadtotest is {}".format(args.loadtotest))
             train(data)
         else:
+            print("Loading model to test.")
             load_model_to_test(data)
     elif status == 'decode':
         print("MODEL: decode")

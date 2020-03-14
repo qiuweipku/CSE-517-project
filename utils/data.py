@@ -66,7 +66,7 @@ class Data:
         self.dset_dir = None ## data vocabulary related file
         self.model_dir = None ## model save  file
         self.load_model_dir = None ## model load file
-
+        self.pretrained_model_path = None ## full path to model to load for testing
         self.word_emb_dir = None
         self.char_emb_dir = None
         self.feature_emb_dirs = []
@@ -122,6 +122,9 @@ class Data:
         self.HP_clip = None
         self.HP_momentum = 0
         self.HP_l2 = 1e-8
+
+        ## sensitivity testing
+        self.test_name = None
 
     def show_data_summary(self):
         
