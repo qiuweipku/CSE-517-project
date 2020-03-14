@@ -15,6 +15,18 @@ If you change the random seed (find `seed_num = 42` in `main.py`, change it and 
 
 Notice that it's different, and the range of values may be different. But there are some similarities too.
 
+# NER task
+The axes of the heatmaps list the NER tags that the model was trying to label. The accuracy rates for each tag vary:
+
+	B-LOC: 0.9069134458356015
+	B-MISC: 0.702819956616052
+	B-ORG: 0.7225950782997763
+	B-PER: 0.9310532030401737
+	I-LOC: 0.669260700389105
+	I-MISC: 0.5549132947976878
+	I-ORG: 0.6125166444740346
+	I-PER: 0.9563886763580719
+	O: 0.995927770279704
 # About the framework we used
 
 Most of the codebase is from NCRF++: An Open-source Neural Sequence Labeling Toolkit. The reference for it follows.
