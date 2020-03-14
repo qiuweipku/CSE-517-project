@@ -11,7 +11,7 @@ import torch.nn.functional as F
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 from .wordrep import WordRep
 import numpy as np # for np.multiply
-
+ABLATE = False
 class WordSequence(nn.Module):
     def __init__(self, data):
         super(WordSequence, self).__init__()
@@ -111,9 +111,10 @@ class WordSequence(nn.Module):
             lstm_out, _ = pad_packed_sequence(lstm_out)
             ''' 
             To ablate a neuron, can we do this?:       '''
-            ablate_list_b_loc = [17]    # First 5 most important: [17, 44, 16, 41, 22]
-            for neuron_index in ablate_list_b_loc:
-                self.lstm.weight_hh_l0[:, neuron_index] = 0
+            if ABLATE:
+                ablate_list_b_loc = [17]    # First 5 most important: [17, 44, 16, 41, 22]
+                for neuron_index in ablate_list_b_loc:
+                    self.lstm.weight_hh_l0[:, neuron_index] = 0
 
             ''' EDITED BELOW'''
             # np_lstm_out = lstm_out.cpu().detach().numpy()
