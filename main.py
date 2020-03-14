@@ -35,7 +35,8 @@ except ImportError:
 '''
 # line 579 of main.py
 REALLY_TRAIN = False
-TRAINED_FILE = 'test_data/lstmtestglove50.10.model'
+# TRAINED_FILE = 'test_data/lstmtestglove50.10.model'
+TRAINED_FILE = 'test_data/lstmtest.9.model'
 # "sample_data/lstmcrf.19.model"
 # TRAINED_FILE = 'sample_data/lstmGlovecrf.8.model'
 # TRAINED_FILE = 'sample_data/lstmGloveBIOcrf.9.model'
@@ -146,6 +147,27 @@ def lr_decay(optimizer, epoch, decay_rate, init_lr):
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
     return optimizer
+
+def heatmap_sensitivity(sensitivities):
+    '''
+    Shows a heatmap for the sensitivity values.
+    :param sensitivities: This is a matrix of [num_tags, num_neurons],
+    which is [10 x 50] in our experimental configuration.
+    :return:
+    '''
+    # transpose to match chart in Figure 7. of paper
+    sensitivities = np.transpose(sensitivities)
+    # column 0 is the padding tag
+    sensitivities = sensitivities[0:50, 1:10]
+    sns.set()
+    # put sensititivites in heat map
+    ax = sns.heatmap(sensitivities)
+    title = "Model: " + TRAINED_FILE
+    plt.title(title, fontsize=18)
+    ttl = ax.title
+    ttl.set_position([0.5, 1.05])
+    plt.show()
+    ax.figure.savefig(TRAINED_FILE+"_heatmap.png")
 
 def get_sensitivity_matrix(label):
     '''
@@ -441,11 +463,7 @@ def load_model_to_test(data, train=False, dev=True, test=False):
 
     if (dev):
         speed, acc, p, r, f, _,_, sensitivities = evaluate(data, model, "dev")
-        sensitivities = np.transpose(sensitivities)
-        sns.set()
-        # put sensititivites in heat map
-        ax = sns.heatmap(sensitivities)
-        plt.show()
+        heatmap_sensitivity(sensitivities)
 
 
         if data.seg:
