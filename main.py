@@ -39,7 +39,7 @@ np.random.seed(seed_num)
 def heatmap_sensitivity(sensitivities,
                         modelname=DEFAULT_TRAINED_FILE,
                         testname="",
-                        show_pad=True, show_vals=True):
+                        show_pad=False, show_vals=True):
     '''
     Shows a heatmap for the sensitivity values.
     :param sensitivities: This is a matrix of [num_tags, num_neurons],
@@ -58,6 +58,7 @@ def heatmap_sensitivity(sensitivities,
     sns.set(font_scale=0.5)
     x_tick = [data.label_alphabet.get_instance(tag) for tag in sorted(data.tag_counts)]
     if show_pad: x_tick[0] = 'PAD'
+    else: del(x_tick[0])
     # put sensititivites in heat map
     ax = sns.heatmap(sensitivities, xticklabels=x_tick, annot=show_vals, fmt=".2g")
     title = "Model ({}): ".format(testname) + modelname
