@@ -5,13 +5,20 @@
 
 
 
-Here is a sensitivity heatmap for 50 neurons and nine BIO labels (may not have correct values yet - investigating if we have bug). It was generated in `main.py`.
-
-**Note** Not planning to leave whole NCRF++ reference, but it's in this readme for now just to use as a template for our own readme.
+Here is a sensitivity heatmap for 50 neurons and nine BIO labels (may not have correct values yet - investigating if we have bug). It was generated in `heatmap_sensitivity()` in `main.py`.
 
 ![Example heatmap](readme/heatmap.png)
 
-Most of the codebase is from NCRF++: An Open-source Neural Sequence Labeling Toolkit. The reference for it follows:
+If you change the random seed (find `seed_num = 42` in `main.py`, change it and train another model), you'll get a different heatmap. Here's the heatmap for a model with the same parameters but a different random seed as the previous one:
+
+![Example heatmap](readme/heatmap2.png)
+
+Notice that it's different, and the range of values may be different. But there are some similarities too.
+
+# About the framework we used
+
+Most of the codebase is from NCRF++: An Open-source Neural Sequence Labeling Toolkit. The reference for it follows.
+**Note:** Not planning to leave the whole NCRF++ reference here, but just for now to use as a template for our own readme.
 
 # Reference for NCRF++: An Open-source Neural Sequence Labeling Toolkit
 * [1. Introduction](#Introduction)
