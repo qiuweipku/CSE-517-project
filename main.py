@@ -61,7 +61,7 @@ def heatmap_sensitivity(sensitivities,
     else: del(x_tick[0])
     # put sensititivites in heat map
     ax = sns.heatmap(sensitivities, xticklabels=x_tick, annot=show_vals, fmt=".2g")
-    title = "Model ({}): ".format(testname) + modelname
+    title = "({}): ".format(testname) + modelname
     plt.title(title, fontsize=18)
     ttl = ax.title
     ttl.set_position([0.5, 1.05])
@@ -259,7 +259,7 @@ def evaluate(data, model, name, nbest=None):
 
     for tag in sorted(data.tag_counts):
         if tag == 0:
-            print("Null tag {}: {} instances.".format('0', data.tag_counts[tag]))
+            print("Padding {}: {} instances.".format('0', data.tag_counts[tag]))
         else:
             print("Tag {}: {} instances.".format(data.label_alphabet.get_instance(tag), data.tag_counts[tag]))
         sensitivity_tag = get_sensitivity_matrix(tag)

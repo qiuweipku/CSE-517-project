@@ -10,6 +10,24 @@ from __future__ import print_function
 import sys
 
 
+def get_per_tag_accuracy(expected_tag_counts, actual_tag_counts, sort=False):
+    '''
+
+    :param expected_tag_counts: A dict created in get_ner_fmeasure()
+    :param actual_tag_counts: A dict created in get_ner_fmeasure()
+    :param sort: True to sort alphabetically by key
+    :return: dict containing the accuracies for each tag
+    '''
+    per_tag_acc = {}
+    for tag in expected_tag_counts:
+        per_tag_acc[tag] = actual_tag_counts[tag]/expected_tag_counts[tag]
+    if sort:
+        for tag in sorted(per_tag_acc):
+            print("\t{}: {}".format(tag, per_tag_acc[tag]))
+    else:
+        for tag in per_tag_acc:
+            print("\t{}: {}".format(tag, per_tag_acc[tag]))
+    return per_tag_acc
 
 ## input as sentence level labels
 def get_ner_fmeasure(golden_lists, predict_lists, label_type="BMES"):
@@ -19,13 +37,18 @@ def get_ner_fmeasure(golden_lists, predict_lists, label_type="BMES"):
     right_full = []
     right_tag = 0
     all_tag = 0
+    expected_tag_counts = {'B-ORG':0,'O':0,'B-MISC':0, 'B-PER':0, 'I-PER':0, 'B-LOC':0, 'I-ORG':0, 'I-MISC':0, 'I-LOC':0}
+    actual_tag_counts = {'B-ORG':0,'O':0,'B-MISC':0, 'B-PER':0, 'I-PER':0, 'B-LOC':0, 'I-ORG':0, 'I-MISC':0, 'I-LOC':0}
     for idx in range(0,sent_num):
         # word_list = sentence_lists[idx]
         golden_list = golden_lists[idx]
         predict_list = predict_lists[idx]
         for idy in range(len(golden_list)):
+            expected_tag = golden_list[idy]
+            expected_tag_counts[expected_tag] += 1
             if golden_list[idy] == predict_list[idy]:
                 right_tag += 1
+                actual_tag_counts[expected_tag] +=1
         all_tag += len(golden_list)
         if label_type == "BMES" or label_type == "BIOES":
             gold_matrix = get_ner_BMES(golden_list)
@@ -54,6 +77,11 @@ def get_ner_fmeasure(golden_lists, predict_lists, label_type="BMES"):
         f_measure = -1
     else:
         f_measure = 2*precision*recall/(precision+recall)
+
+    ''' Prints out the accuracy for all tags '''
+    get_per_tag_accuracy(expected_tag_counts, actual_tag_counts)
+
+    ''' Accuracy for all tags '''
     accuracy = (right_tag+0.0)/all_tag
     # print "Accuracy: ", right_tag,"/",all_tag,"=",accuracy
     if  label_type.upper().startswith("B-"):
