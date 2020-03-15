@@ -81,7 +81,7 @@ def importance_matrix(sensitivities, data):
     for i, l in enumerate(important_lists):
         tags = [data.label_alphabet.get_instance(tag) for tag in sorted(data.tag_counts)]
         del(tags[0]) # remove PAD tag
-        print ("\t{}: {}".format(tags[i], l))
+        print ("\t{}\t{}".format(tags[i], l))
     return important_nps
 
 def heatmap_sensitivity(sensitivities,
