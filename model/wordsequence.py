@@ -79,6 +79,17 @@ class WordSequence(nn.Module):
 
     def forward(self, word_inputs, feature_inputs, word_seq_lengths, char_inputs, char_seq_lengths, char_seq_recover):
         """
+        We do the neuron ablation in this function, by editing these lines of code:
+
+        # change feature_order to be your list of neurons to ablate in order of importance
+        feature_order = \
+            [44, 12, 32, 0, 28, 34, 14, 40, 16, 43, 42, 35, 41, 36, 7, 47, 49, 5, 1, 31, 24, 8, 6, 23, 22, 37, 10, 39,
+             27, 26, 25, 13, 48, 46, 21, 18, 38, 9, 17, 33, 20, 4, 19, 29, 11, 2, 15, 3, 45, 30]
+        mask_np = np.ones(feature_out.shape)
+        mask_np[:, :, feature_order[0:0]] = 0
+
+        To ablate the 1st 25 neurons, mask_np[:, :, feature_order[0:25]] = 0
+
             input:
                 word_inputs: (batch_size, sent_len)
                 feature_inputs: [(batch_size, sent_len), ...] list of variables
@@ -109,24 +120,18 @@ class WordSequence(nn.Module):
             hidden = None
             lstm_out, hidden = self.lstm(packed_words, hidden)
             lstm_out, _ = pad_packed_sequence(lstm_out)
-            ''' 
-            To ablate a neuron, can we do this?:       '''
-#             if ABLATE:
-#                 ablate_list_b_loc = [17]    # First 5 most important: [17, 44, 16, 41, 22]
-#                 for neuron_index in ablate_list_b_loc:
-#                     self.lstm.weight_hh_l0[:, neuron_index] = 0
-
-            ''' EDITED BELOW'''
             # np_lstm_out = lstm_out.cpu().detach().numpy()
             np_lstm_out_trans = lstm_out.transpose(1,0).cpu().detach().numpy()
             ## lstm_out (seq_len, seq_len, hidden_size)
             feature_out = self.droplstm(lstm_out.transpose(1,0))
         ## feature_out (batch_size, seq_len, hidden_size)
         ''' Ablation neuron'''
-        ## this is the feature_order of B-PER, you can change it to what you get.
-        feature_order = [22, 44, 29, 33, 39, 20, 9, 3, 34, 11, 28, 5, 2, 45, 35, 18, 40, 4, 25, 32, 19, 31, 26, 30, 0, 17, 6, 27, 14, 24, 37, 15, 47, 49, 21, 42, 46, 43, 38, 10, 13, 1, 41, 36, 48, 7, 16, 12, 23, 8]
+        ## this is the feature_order of a tag like B-ORG, you can change it to what you get.
+        feature_order = \
+            [44, 12, 32, 0, 28, 34, 14, 40, 16, 43, 42, 35, 41, 36, 7, 47, 49, 5, 1, 31, 24, 8, 6, 23, 22, 37, 10, 39,
+             27, 26, 25, 13, 48, 46, 21, 18, 38, 9, 17, 33, 20, 4, 19, 29, 11, 2, 15, 3, 45, 30]
         mask_np = np.ones(feature_out.shape)
-        mask_np[:, :, feature_order[0:25]] = 0
+        mask_np[:, :, feature_order[0:0]] = 0   ## For 1st 25, mask_np[:, :, feature_order[0:25]] = 0
         mask_tensor = torch.from_numpy(mask_np)
         mask_tensor = torch.tensor(mask_tensor, dtype=torch.float32)
         device = torch.device("cuda")
@@ -134,7 +139,7 @@ class WordSequence(nn.Module):
         feature_out = feature_out.mul(mask_tensor)
         outputs = self.hidden2tag(feature_out)
 
-        ''' EDITED BELOW'''
+        ''' SAVE THE WEIGHTS '''
         np_weights = self.hidden2tag.weight.cpu().detach().numpy()
         self.data.iteration += 1  # counts number of batches
 
@@ -144,7 +149,7 @@ class WordSequence(nn.Module):
                 for j in range(len(np_lstm_out_trans[i]))] for i in range(len(np_lstm_out_trans))]
 
         flat_lstm_out = lstm_out.view(word_inputs.size(0) * max(word_seq_lengths), -1)
-        # contributions_2 = self.hidden2tag.weight * flat_lstm_out
+
         return outputs
 
 
