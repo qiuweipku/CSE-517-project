@@ -32,7 +32,7 @@ except ImportError:
 
 DEFAULT_TRAINED_FILE = 'test_data/lstmtestglove50.9.model'
 
-seed_num = 42
+seed_num = 45
 random.seed(seed_num)
 torch.manual_seed(seed_num)
 np.random.seed(seed_num)
@@ -94,7 +94,9 @@ def heatmap_sensitivity(sensitivities,
                         show_vals=True,
                         disable=False):
     '''
-    Shows a heatmap for the sensitivity values.
+    Shows a heatmap for the sensitivity values, saves the heatmap to a PNG file,
+    and also saves the sensitivity matrix to an .npy file,
+    which we use for calculating correlations between models later.
     :param sensitivities: This is a matrix of [num_tags, num_neurons],
     which is [10 x 50] in our experimental configuration.
     :param disable: disable is just to turn off for debugging
@@ -107,21 +109,28 @@ def heatmap_sensitivity(sensitivities,
     if show_pad:
         start = 0
     sensitivities = sensitivities[0:50, start:10]
-    if not disable:
-        sns.set()
-        # Smaller than normal fonts
-        sns.set(font_scale=0.5)
-        x_tick = [data.label_alphabet.get_instance(tag) for tag in sorted(data.tag_counts)]
-        if show_pad: x_tick[0] = 'PAD'
-        else: del(x_tick[0])
-        # put sensititivites in heat map
-        ax = sns.heatmap(sensitivities, xticklabels=x_tick, annot=show_vals, fmt=".2g")
-        title = "({}): ".format(testname) + modelname
-        plt.title(title, fontsize=18)
-        ttl = ax.title
-        ttl.set_position([0.5, 1.05])
-        plt.show()
-        ax.figure.savefig(modelname+"_heatmap.png")
+    sns.set()
+    # Smaller than normal fonts
+    sns.set(font_scale=0.5)
+    x_tick = [data.label_alphabet.get_instance(tag) for tag in sorted(data.tag_counts)]
+    if show_pad: x_tick[0] = 'PAD'
+    else: del(x_tick[0])
+    # change tags' order
+    sensitivities_temp = np.zeros((50, 9))
+    x_tick_output = ['B-PER', 'I-PER', 'B-LOC', 'I-LOC', 'B-ORG', 'I-ORG', 'B-MISC', 'I-MISC', 'O']
+    for i in range(len(x_tick_output)):
+        sensitivities_temp[:, i] = sensitivities[:, x_tick.index(x_tick_output[i])]
+    np.save(modelname+'_sensitivities.npy', sensitivities_temp)
+    
+    # put sensititivites in heat map
+    ax = sns.heatmap(sensitivities, xticklabels=x_tick, annot=show_vals, fmt=".2g")
+    title = "({}): ".format(testname) + modelname
+    plt.title(title, fontsize=18)
+    ttl = ax.title
+    ttl.set_position([0.5, 1.05])
+    plt.show()
+    ax.figure.savefig(modelname+"_heatmap.png")
+
 
 def get_sensitivity_matrix(label, debug=True):
     '''

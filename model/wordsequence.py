@@ -100,7 +100,7 @@ class WordSequence(nn.Module):
             output:
                 Variable(batch_size, sent_len, hidden_dim)
         """
-        
+    
         word_represent = self.wordrep(word_inputs,feature_inputs, word_seq_lengths, char_inputs, char_seq_lengths, char_seq_recover)
         ## word_embs (batch_size, seq_len, embed_size)
         if self.word_feature_extractor == "CNN":
@@ -126,12 +126,14 @@ class WordSequence(nn.Module):
             feature_out = self.droplstm(lstm_out.transpose(1,0))
         ## feature_out (batch_size, seq_len, hidden_size)
         ''' Ablation neuron'''
+
         ## this is the feature_order of a tag like B-ORG, you can change it to what you get.
         feature_order = \
             [44, 12, 32, 0, 28, 34, 14, 40, 16, 43, 42, 35, 41, 36, 7, 47, 49, 5, 1, 31, 24, 8, 6, 23, 22, 37, 10, 39,
              27, 26, 25, 13, 48, 46, 21, 18, 38, 9, 17, 33, 20, 4, 19, 29, 11, 2, 15, 3, 45, 30]
         mask_np = np.ones(feature_out.shape)
         mask_np[:, :, feature_order[0:0]] = 0   ## For 1st 25, mask_np[:, :, feature_order[0:25]] = 0
+
         mask_tensor = torch.from_numpy(mask_np)
         mask_tensor = torch.tensor(mask_tensor, dtype=torch.float32)
         device = torch.device("cuda")
