@@ -112,9 +112,7 @@ def heatmap_sensitivity(sensitivities,
     x_tick_output = ['B-PER', 'I-PER', 'B-LOC', 'I-LOC', 'B-ORG', 'I-ORG', 'B-MISC', 'I-MISC', 'O']
     for i in range(len(x_tick_output)):
         sensitivities_temp[:, i] = sensitivities[:, x_tick.index(x_tick_output[i])]
-    sensitivities = sensitivities_temp
-    np.save(modelname+'_sensitivities.npy', sensitivities)
-    x_tick = x_tick_output
+    np.save(modelname+'_sensitivities.npy', sensitivities_temp)
     
     # put sensititivites in heat map
     ax = sns.heatmap(sensitivities, xticklabels=x_tick, annot=show_vals, fmt=".2g")
