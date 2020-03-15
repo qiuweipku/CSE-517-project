@@ -37,7 +37,7 @@ random.seed(seed_num)
 torch.manual_seed(seed_num)
 np.random.seed(seed_num)
 
-def importance_matrix(sensitivities):
+def importance_matrix(sensitivities, data):
     '''
     Builds a matrix of tag sensitivities
     :param sensitivities: This is a matrix of [num_tags, num_neurons],
@@ -77,8 +77,11 @@ def importance_matrix(sensitivities):
     ttl.set_position([0.5, 1.05])
     plt.show()
     ax.figure.savefig("ImportanceRankings.png")
+    print('Neuron importance ranking for each NER tag:')
+    tags = [data.label_alphabet.get_instance(tag) for tag in sorted(data.tag_counts)]
+    del(tags[0]) # remove PAD tag
     for i, l in enumerate(important_lists):
-        print ("importance rankings for tag {}: {}".format(i, l))
+        print ("\t{}\t{}".format(tags[i], l))
     return important_nps
 
 def heatmap_sensitivity(sensitivities,
@@ -123,13 +126,11 @@ def get_sensitivity_matrix(label, debug=True):
     avg_for_label = data.tag_contributions[label]/data.tag_counts[label]
     sum_other_counts = 0
 
-    # data.tag_contributions[0]  # this SHOULD be zero for masked label
-    sum_other_contributions = np.zeros((10, 50))# data.tag_contributions[0]  # this will be zero for masked label
+    # data.tag_contributions[0] is for the padding label and can be ignored
+    sum_other_contributions = np.zeros((10, 50))
     for l in data.tag_counts:
 
-        if l != label and l != 0:  #  if l != label:
-
-            #  WAS if l != label and l != 0:, but if sum_other_counts is bigger, the entire sensitivity is bigger
+        if l != label and l != 0:  #  if l != label: (to consider the padding label which is 0)
             sum_other_counts += data.tag_counts[l]
             sum_other_contributions += data.tag_contributions[l]
     avg_for_others = sum_other_contributions/sum_other_counts
@@ -521,7 +522,7 @@ def load_model_to_test(data, train=False, dev=True, test=False):
     if (dev):
         speed, acc, p, r, f, _,_, sensitivities = evaluate(data, model, "dev")
         heatmap_sensitivity(sensitivities, data.pretrained_model_path, testname="dev")
-        importance_matrix(sensitivities)
+        importance_matrix(sensitivities, data)
 
 
         if data.seg:

@@ -78,9 +78,9 @@ def importance_matrix(sensitivities, data):
     plt.show()
     ax.figure.savefig("ImportanceRankings.png")
     print('Neuron importance ranking for each NER tag:')
+    tags = [data.label_alphabet.get_instance(tag) for tag in sorted(data.tag_counts)]
+    del(tags[0]) # remove PAD tag
     for i, l in enumerate(important_lists):
-        tags = [data.label_alphabet.get_instance(tag) for tag in sorted(data.tag_counts)]
-        del(tags[0]) # remove PAD tag
         print ("\t{}\t{}".format(tags[i], l))
     return important_nps
 
