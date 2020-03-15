@@ -123,10 +123,11 @@ class WordSequence(nn.Module):
             feature_out = self.droplstm(lstm_out.transpose(1,0))
         ## feature_out (batch_size, seq_len, hidden_size)
         ''' Ablation neuron'''
-        ## this is the feature_order of B-PER, you can change it to what you get.
-        feature_order = [22, 44, 29, 33, 39, 20, 3, 9, 34, 11, 28, 5, 2, 45, 35, 18, 40, 4, 25, 31, 19, 32, 0, 26, 30, 17, 27, 6, 14, 24, 15, 37, 47, 49, 21, 42, 46, 43, 38, 10, 13, 1, 41, 36, 48, 7, 16, 12, 23, 8]
+
+        feature_order = [12, 42, 37, 48, 18, 13, 34, 28, 4, 44, 2, 8, 22, 24, 19, 43, 11, 45, 36, 41, 29, 47, 40, 31, 21, 25, 33, 46, 26, 7, 6, 49, 15, 32, 20, 3, 39, 17, 9, 30, 16, 38, 1, 10, 35, 23, 14, 0, 27, 5]
+        
         mask_np = np.ones(feature_out.shape)
-        mask_np[:, :, feature_order[0:4]] = 0
+#         mask_np[:, :, feature_order[0:0]] = 0
         mask_tensor = torch.from_numpy(mask_np)
         mask_tensor = torch.tensor(mask_tensor, dtype=torch.float32)
         device = torch.device("cuda")

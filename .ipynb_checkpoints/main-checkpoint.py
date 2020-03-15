@@ -32,7 +32,7 @@ except ImportError:
 
 DEFAULT_TRAINED_FILE = 'test_data/lstmtestglove50.9.model'
 
-seed_num = 42
+seed_num = 45
 random.seed(seed_num)
 torch.manual_seed(seed_num)
 np.random.seed(seed_num)
@@ -107,6 +107,15 @@ def heatmap_sensitivity(sensitivities,
     x_tick = [data.label_alphabet.get_instance(tag) for tag in sorted(data.tag_counts)]
     if show_pad: x_tick[0] = 'PAD'
     else: del(x_tick[0])
+    # change tags' order
+    sensitivities_temp = np.zeros((50, 9))
+    x_tick_output = ['B-PER', 'I-PER', 'B-LOC', 'I-LOC', 'B-ORG', 'I-ORG', 'B-MISC', 'I-MISC', 'O']
+    for i in range(len(x_tick_output)):
+        sensitivities_temp[:, i] = sensitivities[:, x_tick.index(x_tick_output[i])]
+    sensitivities = sensitivities_temp
+    np.save(modelname+'_sensitivities.npy', sensitivities)
+    x_tick = x_tick_output
+    
     # put sensititivites in heat map
     ax = sns.heatmap(sensitivities, xticklabels=x_tick, annot=show_vals, fmt=".2g")
     title = "({}): ".format(testname) + modelname
