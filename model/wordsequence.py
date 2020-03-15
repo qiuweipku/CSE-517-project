@@ -126,7 +126,7 @@ class WordSequence(nn.Module):
         ## this is the feature_order of B-PER, you can change it to what you get.
         feature_order = [22, 44, 29, 33, 39, 20, 3, 9, 34, 11, 28, 5, 2, 45, 35, 18, 40, 4, 25, 31, 19, 32, 0, 26, 30, 17, 27, 6, 14, 24, 15, 37, 47, 49, 21, 42, 46, 43, 38, 10, 13, 1, 41, 36, 48, 7, 16, 12, 23, 8]
         mask_np = np.ones(feature_out.shape)
-        mask_np[:, :, feature_order[0:3]] = 0
+        mask_np[:, :, feature_order[0:4]] = 0
         mask_tensor = torch.from_numpy(mask_np)
         mask_tensor = torch.tensor(mask_tensor, dtype=torch.float32)
         device = torch.device("cuda")

@@ -84,9 +84,10 @@ def get_ner_fmeasure(golden_lists, predict_lists, label_type="BMES"):
 
     ''' Prints out the accuracy for all tags '''
     get_per_tag_accuracy(expected_tag_counts, actual_tag_counts)
-
     ''' Accuracy for all tags '''
     accuracy = (right_tag+0.0)/all_tag
+    print("\t{}\t{:.3f}".format('ALL', accuracy))
+
     # print "Accuracy: ", right_tag,"/",all_tag,"=",accuracy
     if  label_type.upper().startswith("B-"):
         print("gold_num = ", golden_num, " pred_num = ", predict_num, " right_num = ", right_num)
