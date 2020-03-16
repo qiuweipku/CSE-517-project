@@ -32,7 +32,7 @@ except ImportError:
 
 DEFAULT_TRAINED_FILE = 'test_data/lstmtestglove50.9.model'
 
-seed_num = 45
+seed_num = 46
 random.seed(seed_num)
 torch.manual_seed(seed_num)
 np.random.seed(seed_num)
