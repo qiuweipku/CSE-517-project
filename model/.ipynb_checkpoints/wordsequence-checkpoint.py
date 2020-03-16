@@ -125,8 +125,9 @@ class WordSequence(nn.Module):
             ## lstm_out (seq_len, seq_len, hidden_size)
             feature_out = self.droplstm(lstm_out.transpose(1,0))
         ## feature_out (batch_size, seq_len, hidden_size)
-        ''' Ablation neuron'''
 
+
+        ''' Ablation of neurons '''
         ## this is the feature_order of a tag like B-ORG, you can change it to what you get.
         feature_order = \
             [44, 12, 32, 0, 28, 34, 14, 40, 16, 43, 42, 35, 41, 36, 7, 47, 49, 5, 1, 31, 24, 8, 6, 23, 22, 37, 10, 39,
@@ -143,9 +144,13 @@ class WordSequence(nn.Module):
 
         ''' SAVE THE WEIGHTS '''
         np_weights = self.hidden2tag.weight.cpu().detach().numpy()
+        if self.data.weights_saved == False:
+            self.data.weights_saved == True
+            self.data.weights = np_weights
+            np.save('weights.npy', np_weights)
         self.data.iteration += 1  # counts number of batches
 
-        # SAVE CONTRIBUTIONS FOR THIS BATCH
+        ''' SAVE CONTRIBUTIONS FOR THIS BATCH '''
         self.data.batch_contributions = [[np.multiply(
             np_weights, np_lstm_out_trans[i][j])
                 for j in range(len(np_lstm_out_trans[i]))] for i in range(len(np_lstm_out_trans))]
