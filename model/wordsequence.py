@@ -127,7 +127,7 @@ class WordSequence(nn.Module):
         feature_order = [12, 42, 37, 48, 18, 13, 34, 28, 4, 44, 2, 8, 22, 24, 19, 43, 11, 45, 36, 41, 29, 47, 40, 31, 21, 25, 33, 46, 26, 7, 6, 49, 15, 32, 20, 3, 39, 17, 9, 30, 16, 38, 1, 10, 35, 23, 14, 0, 27, 5]
         
         mask_np = np.ones(feature_out.shape)
-#         mask_np[:, :, feature_order[0:0]] = 0
+        mask_np[:, :, feature_order[0:0]] = 0
         mask_tensor = torch.from_numpy(mask_np)
         mask_tensor = torch.tensor(mask_tensor, dtype=torch.float32)
         device = torch.device("cuda")
