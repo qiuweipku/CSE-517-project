@@ -38,7 +38,7 @@ torch.manual_seed(seed_num)
 np.random.seed(seed_num)
 
 def importance_matrix(sensitivities, data,
-                      print_imp=True, show_table=False):
+                      print_imp=True, show_table=True):
     '''
     Builds a matrix of tag sensitivities
     :param sensitivities: This is a matrix of [num_tags, num_neurons],
@@ -123,13 +123,14 @@ def heatmap_sensitivity(sensitivities,
     np.save(modelname+'_sensitivities.npy', sensitivities_temp)
     
     # put sensititivites in heat map
-    ax = sns.heatmap(sensitivities, xticklabels=x_tick, annot=show_vals, fmt=".2g")
-    title = "({}): ".format(testname) + modelname
-    plt.title(title, fontsize=18)
-    ttl = ax.title
-    ttl.set_position([0.5, 1.05])
-    plt.show()
-    ax.figure.savefig(modelname+"_heatmap.png")
+    if not disable:
+        ax = sns.heatmap(sensitivities, xticklabels=x_tick, annot=show_vals, fmt=".2g")
+        title = "({}): ".format(testname) + modelname
+        plt.title(title, fontsize=18)
+        ttl = ax.title
+        ttl.set_position([0.5, 1.05])
+        plt.show()
+        ax.figure.savefig(modelname+"_heatmap.png")
 
 
 def get_sensitivity_matrix(label, debug=True):

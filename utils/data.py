@@ -127,6 +127,8 @@ class Data:
         self.test_name = None
         self.ablate_list = []
         self.ablate_num = []
+        self.weights_saved = False
+        self.weights = []
 
     def show_data_summary(self):
         
