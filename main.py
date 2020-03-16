@@ -80,11 +80,15 @@ def importance_matrix(sensitivities, data,
         plt.show()
         ax.figure.savefig("ImportanceRankings.png")
     if print_imp:
+        imp_file = open("Importance.txt", "w+")
         print('Neuron importance ranking for each NER tag:')
         for i, l in enumerate(important_lists):
             tags = [data.label_alphabet.get_instance(tag) for tag in sorted(data.tag_counts)]
             del(tags[0]) # remove PAD tag
             print ("\t{}\t{}".format(tags[i], l))
+            imp_file.write("\t{}\t{}\n".format(tags[i], l))
+        imp_file.write("\n")
+        np.savetxt("Importance.tsv", important_nps, fmt='%2.0d', delimiter='\t')
     return important_nps
 
 def heatmap_sensitivity(sensitivities,
