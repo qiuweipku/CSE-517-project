@@ -37,7 +37,8 @@ random.seed(seed_num)
 torch.manual_seed(seed_num)
 np.random.seed(seed_num)
 
-def importance_matrix(sensitivities, data):
+def importance_matrix(sensitivities, data,
+                      print_imp=True, show_table=False):
     '''
     Builds a matrix of tag sensitivities
     :param sensitivities: This is a matrix of [num_tags, num_neurons],
@@ -63,35 +64,42 @@ def importance_matrix(sensitivities, data):
 
     important_nps = np.delete(important_nps, 0, axis=0)
     important_nps = np.transpose(important_nps)
-    sns.set()
-    # Smaller than normal fonts
-    sns.set(font_scale=0.5)
-    x_tick = [data.label_alphabet.get_instance(tag) for tag in sorted(data.tag_counts)]
-    del(x_tick[0])
-    ax = sns.heatmap(important_nps, annot=True, xticklabels=x_tick,
-                     cmap=ListedColormap(['white']), cbar=False, yticklabels=False,
-                     linecolor='gray', linewidths=0.4)
-    title = "Importance rankings of neurons per tag"
-    plt.title(title, fontsize=18)
-    ttl = ax.title
-    ttl.set_position([0.5, 1.05])
-    plt.show()
-    ax.figure.savefig("ImportanceRankings.png")
-    print('Neuron importance ranking for each NER tag:')
-    tags = [data.label_alphabet.get_instance(tag) for tag in sorted(data.tag_counts)]
-    del(tags[0]) # remove PAD tag
-    for i, l in enumerate(important_lists):
-        print ("\t{}\t{}".format(tags[i], l))
+    if show_table:
+        sns.set()
+        # Smaller than normal fonts
+        sns.set(font_scale=0.5)
+        x_tick = [data.label_alphabet.get_instance(tag) for tag in sorted(data.tag_counts)]
+        del(x_tick[0])
+        ax = sns.heatmap(important_nps, annot=True, xticklabels=x_tick,
+                         cmap=ListedColormap(['white']), cbar=False, yticklabels=False,
+                         linecolor='gray', linewidths=0.4)
+        title = "Importance rankings of neurons per tag"
+        plt.title(title, fontsize=18)
+        ttl = ax.title
+        ttl.set_position([0.5, 1.05])
+        plt.show()
+        ax.figure.savefig("ImportanceRankings.png")
+    if print_imp:
+        print('Neuron importance ranking for each NER tag:')
+        for i, l in enumerate(important_lists):
+            tags = [data.label_alphabet.get_instance(tag) for tag in sorted(data.tag_counts)]
+            del(tags[0]) # remove PAD tag
+            print ("\t{}\t{}".format(tags[i], l))
     return important_nps
 
 def heatmap_sensitivity(sensitivities,
                         modelname=DEFAULT_TRAINED_FILE,
                         testname="",
-                        show_pad=False, show_vals=True):
+                        show_pad=False,
+                        show_vals=True,
+                        disable=False):
     '''
-    Shows a heatmap for the sensitivity values.
+    Shows a heatmap for the sensitivity values, saves the heatmap to a PNG file,
+    and also saves the sensitivity matrix to an .npy file,
+    which we use for calculating correlations between models later.
     :param sensitivities: This is a matrix of [num_tags, num_neurons],
     which is [10 x 50] in our experimental configuration.
+    :param disable: disable is just to turn off for debugging
     :return:
     '''
     # transpose to match chart in Figure 7. of paper
@@ -122,6 +130,7 @@ def heatmap_sensitivity(sensitivities,
     ttl.set_position([0.5, 1.05])
     plt.show()
     ax.figure.savefig(modelname+"_heatmap.png")
+
 
 def get_sensitivity_matrix(label, debug=True):
     '''
