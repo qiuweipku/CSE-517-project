@@ -62,7 +62,9 @@ def importance_matrix(sensitivities, data,
         important_lists.append(important_list)
         important_nps = np.vstack((important_nps, important_np))
 
-    important_nps = np.delete(important_nps, 0, axis=0)
+    important_nps = np.delete(important_nps, 0, axis=0) # delete padding tag
+    np.save("imps.npy",important_nps) # save importance rows for other scripts to use
+
     important_nps = np.transpose(important_nps)
     if show_table:
         sns.set()
@@ -89,6 +91,7 @@ def importance_matrix(sensitivities, data,
             imp_file.write("\t{}\t{}\n".format(tags[i], l))
         imp_file.write("\n")
         np.savetxt("Importance.tsv", important_nps, fmt='%2.0d', delimiter='\t')
+
     return important_nps
 
 def heatmap_sensitivity(sensitivities,
