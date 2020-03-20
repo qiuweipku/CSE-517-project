@@ -11,7 +11,7 @@ We're working on a replication of results from the following paper:
 * [2. Next steps](#Next steps)
 -->
 # Usage
-We added code for calculating sensitivity, importance rankings, accuracies, ablating neurons, similarity, and overlap.
+We added code for calculating sensitivity, importance rankings, accuracies, ablating neurons, correlations, similarity, overlap, as well as preprocessing the dataset.
 * [1. Train](#Train-and-test)
 * [2. Sensitivities](#Sensitivities)
 * [3. Importance Rankings](#Importance-Rankings)
