@@ -8,11 +8,10 @@ We're working on a replication of results from the following paper:
 > Xin, J., Lin, J., & Yu, Y. (2019, November). What Part of the Neural Network Does This? Understanding LSTMs by Measuring and Dissecting Neurons. In Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing and the 9th International Joint Conference on Natural Language Processing (EMNLP-IJCNLP) (pp. 5827-5834).
 <!--
 * [1. Usage](#Usage)
-* [2. Code](#Code)
-* [3. Conclusions](#Conclusions)
+* [2. Next steps](#Next steps)
 -->
 # Usage
-We added code for calculating sensitivity, importance rankings, accuracies, ablating neurons, similarity, and overlap.
+We added code for calculating sensitivity, importance rankings, accuracies, ablating neurons, correlations, similarity, overlap, as well as preprocessing the dataset.
 * [1. Train](#Train-and-test)
 * [2. Sensitivities](#Sensitivities)
 * [3. Importance Rankings](#Importance-Rankings)
@@ -21,6 +20,7 @@ We added code for calculating sensitivity, importance rankings, accuracies, abla
 * [6. Correlations](#Correlations)
 * [7. Similarity](#Similarity)
 * [8. Overlap](#Overlap)
+* [9. Preprocessing](#preprocessing)
 
 ## Train and test
 **Train**: Training the model from the paper takes about 10 minutes. To train a model, edit a config file (an example is test.train.config), so that `model_dir` indicating the path and beginning of the filename to where you want to save your trained model. For example, `model_dir=test_data/lstmtest50` will save the model in the file `test_data/lstmtest50.9.model` (the 9 is for the 10th epoch of training starting at index 0 so that's why it's 9 and not 10). The config file consumes some preprocessed data we put in the `test_data` directory.
@@ -41,7 +41,7 @@ Notice that it's different, and the range of values may be different. But there 
 
 
 ## Importance rankings
-**Importance rankings** for neurons are generated in files `ImportanceRankings.png`, `Importance.txt`, `Importance.tsv`, and `imps.npy`. The last one is used to calculate *overlap*. 
+**Importance rankings** for neurons are generated in files `ImportanceRankings.png`, `Importance.txt`, `Importance.tsv`, and `imps.npy`. The last one is used to calculate [*overlap*](#overlap). 
 Using the sensitivity matrix shown in the heatmap, we determine the importance ranking of the each neuron and list them from most to least important. Here an example of the `ImportanceRankings.png`.
 
 ![Importance ranking](readme/importance.png)
@@ -74,6 +74,9 @@ In an experiment beyond what the paper did, we measure the cosine similarity bet
 
 ## Overlap
 In an experiment beyond what the paper did, we measure the shared neurons in the top-ten most-important neurons of a pair of labels in the model to see if there's correlation between models with different random seeds and with ablation patterns. The code for this is in `overlap()` in `utils/weight-similarity.py`.
+
+## Preprocessing
+We have preprocessing code in `preprocessing.ipynb` if you want to use it. We processed some additional datasets which are in subfolders of the `data` directory.
 
 ## About the framework we used
 
