@@ -10,8 +10,17 @@ We're working on a replication of results from the following paper:
 * [1. Usage](#Usage)
 * [2. Code](#Code)
 * [3. Conclusions](#Conclusions)
-# Usage
 -->
+# Usage
+We added code for calculating sensitivity, importance rankings, accuracies, ablating neurons, similarity, and overlap.
+* [1. Train](#Train)
+* [2. Sensitivities](#Sensitivities)
+* [3. Importance Rankings](#Importance-Rankings)
+* [4. Accuracies](#Accuracies)
+* [5. Ablating neurons](#Ablating-neurons)
+* [6. Similarity](#Similarity)
+* [7. Overlap](#Overlap)
+
 **Train**: Training the model from the paper takes about 10 minutes. To train a model, edit a config file (an example is test.train.config), so that `model_dir` indicating the path and beginning of the filename to where you want to save your trained model. For example, `model_dir=test_data/lstmtest50` will save the model in the file `test_data/lstmtest50.9.model` (the 9 is for the 10th epoch of training starting at index 0 so that's why it's 9 and not 10). The config file consumes some preprocessed data we put in the `test_data` directory.
 
 Then run:
@@ -30,7 +39,10 @@ Notice that it's different, and the range of values may be different. But there 
 
 
 ## Importance rankings
-**Importance rankings** are generated in files `ImportanceRankings.png`, `Importance.txt`, `Importance.tsv`, and `imps.npy`. The last one is used to calculate *overlap*.
+**Importance rankings** for neurons are generated in files `ImportanceRankings.png`, `Importance.txt`, `Importance.tsv`, and `imps.npy`. The last one is used to calculate *overlap*. 
+Using the sensitivity matrix shown in the heatmap, we determine the importance ranking of the each neuron and list them from most to least important. Here an example of the `ImportanceRankings.png`.
+
+![Importance ranking](readme/importance.png)
 
 ## Accuracies
 **Accuracies** The console output should show some accuracies. These are the accuracies we use to generate charts like the one ![comparing embeddings](readme/B-ORG-embedding-compare.png) showing how accuracy degrades over when you ablate important neurons. These are also written to files in the root directory with names like `n_acc.txt` for accuracy when you ablate n neurons. 
@@ -52,18 +64,15 @@ The axes of the heatmaps list the NER tags that the model was trying to label. T
 
 > python3 main.py --config test.train.config --loadtotest True --pretrainedmodelpath "test_data/lstmtest50.9.model" --ablate 10
 
-# Importance ranking of neurons
-Using the sensitivity matrix shown in the heatmap, we can determine the importance ranking of the each neuron and list them from most to least important.
 
-![Importance ranking](readme/importance.png)
 
 # Similarity
 In an experiment beyond what the paper did, we measure the cosine similarity between learned weights for a pair of labels in the fully-connected layer of the model to see if there's correlation between models with different random seeds and with ablation patterns. The code for this is in `weight-similarity.py`. The weights this function uses are saved after you train the model in `weights.npy`.
 
-# Overlap
+## Overlap
 In an experiment beyond what the paper did, we measure the shared neurons in the top-ten most-important neurons of a pair of labels in the model to see if there's correlation between models with different random seeds and with ablation patterns. The code for this is in `overlap()` in `weight-similarity.py`.
 
-# About the framework we used
+## About the framework we used
 
 Most of the codebase is from NCRF++: An Open-source Neural Sequence Labeling Toolkit. The reference for it follows.
 <!-- **Note:** Not planning to leave the whole NCRF++ reference here, but just for now to use as a guide for our own readme. -->
