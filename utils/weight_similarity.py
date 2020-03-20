@@ -87,7 +87,7 @@ for c in list(i_comb):
     imp_matrix[c[1], c[0]] = n
 
 for i in range(9):
-    imp_matrix[i, i] = 1
+    imp_matrix[i, i] = 10
 tick = ['B-PER', 'I-PER', 'B-LOC', 'I-LOC', 'B-ORG', 'I-ORG', 'B-MISC', 'I-MISC', 'O']
 cmap = sns.diverging_palette(260, 10, as_cmap=True)
 sns.heatmap(imp_matrix, annot=True, cmap=cmap, xticklabels=tick, yticklabels=tick, square=True, cbar=False)
