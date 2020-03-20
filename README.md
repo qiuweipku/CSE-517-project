@@ -6,22 +6,50 @@
 We're working on a replication of results from the following paper:
 
 > Xin, J., Lin, J., & Yu, Y. (2019, November). What Part of the Neural Network Does This? Understanding LSTMs by Measuring and Dissecting Neurons. In Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing and the 9th International Joint Conference on Natural Language Processing (EMNLP-IJCNLP) (pp. 5827-5834).
+<!--
+* [1. Usage](#Usage)
+* [2. Code](#Code)
+* [3. Conclusions](#Conclusions)
+-->
+# Usage
+We added code for calculating sensitivity, importance rankings, accuracies, ablating neurons, similarity, and overlap.
+* [1. Train](#Train-and-test)
+* [2. Sensitivities](#Sensitivities)
+* [3. Importance Rankings](#Importance-Rankings)
+* [4. Accuracies](#Accuracies)
+* [5. Ablating neurons](#Ablating-neurons)
+* [6. Correlations](#Correlations)
+* [7. Similarity](#Similarity)
+* [8. Overlap](#Overlap)
 
-Here is a sensitivity heatmap for 50 neurons and nine BIO labels. It was generated in `heatmap_sensitivity()` in `main.py`.
+## Train and test
+**Train**: Training the model from the paper takes about 10 minutes. To train a model, edit a config file (an example is test.train.config), so that `model_dir` indicating the path and beginning of the filename to where you want to save your trained model. For example, `model_dir=test_data/lstmtest50` will save the model in the file `test_data/lstmtest50.9.model` (the 9 is for the 10th epoch of training starting at index 0 so that's why it's 9 and not 10). The config file consumes some preprocessed data we put in the `test_data` directory.
 
+Then run:
+> python3 main.py --config test.train.config 
+
+**Test**: To run some of the evaluations that get data for our charts, run (change --pretrainedmodelpath to match what you set in the config file, plus ".9.model".:
+> python3 main.py --config test.train.config --loadtotest True --pretrainedmodelpath "test_data/lstmtest50.9.model" --ablate 0
+
+## Sensitivities
+**Sensitivity heatmap** is generated in the `/test_data` directory (or whereever you specified in the config file) and has a name like `lstmtest50.9.model_heatmap.png`. There's also a `lstmtest50.9.model_heatmap.npy` used to calculate correlations between models. Here is a sensitivity heatmap for 50 neurons and nine BIO labels. It was generated in `heatmap_sensitivity()` in `main.py`.
 ![Example heatmap](readme/heatmap.png)
 
-<!--
 If you change the random seed (find `seed_num = 42` in `main.py`, change it and train another model), you'll get a different heatmap. Here's the heatmap for a model with the same parameters but a different random seed as the previous one:
-
+Notice that it's different, and the range of values may be different. But there are some similarities too.
 ![Example heatmap](readme/heatmap2.png)
 
 
-Notice that it's different, and the range of values may be different. But there are some similarities too.
--->
+## Importance rankings
+**Importance rankings** for neurons are generated in files `ImportanceRankings.png`, `Importance.txt`, `Importance.tsv`, and `imps.npy`. The last one is used to calculate *overlap*. 
+Using the sensitivity matrix shown in the heatmap, we determine the importance ranking of the each neuron and list them from most to least important. Here an example of the `ImportanceRankings.png`.
 
-# NER task
-The axes of the heatmaps list the NER tags that the model was trying to label. The accuracy rates for each tag vary:
+![Importance ranking](readme/importance.png)
+
+## Accuracies
+**Accuracies** The console output should show some accuracies. These are the accuracies we use to generate charts like the one ![comparing embeddings](readme/B-ORG-embedding-compare.png) showing how accuracy degrades over when you ablate important neurons. These are also written to files in the root directory with names like `n_acc.txt` for accuracy when you ablate n neurons. 
+
+The axes of the heatmaps list the NER tags that the model was trying to label. The accuracy rates for each tag vary, for example they might look like:
 
 	B-LOC: 0.9069134458356015
 	B-MISC: 0.702819956616052
@@ -33,15 +61,24 @@ The axes of the heatmaps list the NER tags that the model was trying to label. T
 	I-PER: 0.9563886763580719
 	O: 0.995927770279704
 
-# Importance ranking of neurons
-Using the sensitivity matrix shown in the heatmap, we can determine the importance ranking of the each neuron and list them from most to least important.
+## Ablating neurons
+**Ablating neurons** The `--ablate` flag specifies how many neurons to ablate. You get the list of neurons to ablate from the importance ranking files or the console output, for a specified tag like B-ORG or I-MISC. Paste this list into `forward()` in `wordsequence.py` where we have a comment about `"Ablation of neurons"` for the value of `feature order`, and then run a command like the following which specifies that you want to ablate the top ten neurons.
 
-![Importance ranking](readme/importance.png)
+> python3 main.py --config test.train.config --loadtotest True --pretrainedmodelpath "test_data/lstmtest50.9.model" --ablate 10
 
-# About the framework we used
+## Correlations
+To calculate the correlations between the neuron sensitivitities for models with different random seeds, you can use the code in `utils/corr.py` or in `correlation_plotting.ipynb`. This will save the correlation heatmap to '/test_data/lstmtestglove50.9.model_sensitivities_correlation.png'. You can change that path to whereever you saved the trained model.
+
+## Similarity
+In an experiment beyond what the paper did, we measure the cosine similarity between learned weights for a pair of labels in the fully-connected layer of the model to see if there's correlation between models with different random seeds and with ablation patterns. The code for this is in `utils/weight-similarity.py`. The weights this function uses are saved after you train the model in `weights.npy`.
+
+## Overlap
+In an experiment beyond what the paper did, we measure the shared neurons in the top-ten most-important neurons of a pair of labels in the model to see if there's correlation between models with different random seeds and with ablation patterns. The code for this is in `overlap()` in `utils/weight-similarity.py`.
+
+## About the framework we used
 
 Most of the codebase is from NCRF++: An Open-source Neural Sequence Labeling Toolkit. The reference for it follows.
-<!-- **Note:** Not planning to leave the whole NCRF++ reference here, but just for now to use as a template for our own readme. -->
+<!-- **Note:** Not planning to leave the whole NCRF++ reference here, but just for now to use as a guide for our own readme. -->
 
 # Reference for NCRF++: An Open-source Neural Sequence Labeling Toolkit
 * [1. Introduction](#Introduction)
