@@ -7,7 +7,19 @@ We're working on a replication of results from the following paper:
 
 > Xin, J., Lin, J., & Yu, Y. (2019, November). What Part of the Neural Network Does This? Understanding LSTMs by Measuring and Dissecting Neurons. In Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing and the 9th International Joint Conference on Natural Language Processing (EMNLP-IJCNLP) (pp. 5827-5834).
 
-Here is a sensitivity heatmap for 50 neurons and nine BIO labels. It was generated in `heatmap_sensitivity()` in `main.py`.
+# How to run our code
+
+**Train**: Training the model from the paper takes about 10 minutes. To train a model, edit a config file (an example is test.train.config), so that `model_dir` indicating the path and beginning of the filename to where you want to save your trained model. For example, `model_dir=test_data/lstmtest50` will save the model in the file `test_data/lstmtest50.9.model` (the 9 is for the 10th epoch of training starting at index 0 so that's why it's 9 and not 10).
+
+Then run:
+> python3 main.py --config test.train.config 
+
+**Get data**: To run evaluations that get data for our charts, run (change --pretrainedmodelpath to match what you set in the config file, plus ".9.model":
+> python3 main.py --config test.train.config --loadtotest True --pretrainedmodelpath "test_data/lstmtest50.9.model" --ablate 0
+
+The console output should show some accuracies. These are the accuracies we use to generate charts like the one ![comparing embeddings](readme/B-ORG-embedding-compare.png) showing how accuracy degrades over when you ablate important neurons.
+
+A heatmap is also generated in the same directory as the model. Here is a sensitivity heatmap for 50 neurons and nine BIO labels. It was generated in `heatmap_sensitivity()` in `main.py`.
 
 ![Example heatmap](readme/heatmap.png)
 
