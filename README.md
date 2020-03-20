@@ -7,15 +7,18 @@ We're working on a replication of results from the following paper:
 
 > Xin, J., Lin, J., & Yu, Y. (2019, November). What Part of the Neural Network Does This? Understanding LSTMs by Measuring and Dissecting Neurons. In Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing and the 9th International Joint Conference on Natural Language Processing (EMNLP-IJCNLP) (pp. 5827-5834).
 
-Here is a sensitivity heatmap for 50 neurons and nine BIO labels (may not have correct values yet - investigating if we have bug). It was generated in `heatmap_sensitivity()` in `main.py`.
+Here is a sensitivity heatmap for 50 neurons and nine BIO labels. It was generated in `heatmap_sensitivity()` in `main.py`.
 
 ![Example heatmap](readme/heatmap.png)
 
+<!--
 If you change the random seed (find `seed_num = 42` in `main.py`, change it and train another model), you'll get a different heatmap. Here's the heatmap for a model with the same parameters but a different random seed as the previous one:
 
 ![Example heatmap](readme/heatmap2.png)
 
+
 Notice that it's different, and the range of values may be different. But there are some similarities too.
+-->
 
 # NER task
 The axes of the heatmaps list the NER tags that the model was trying to label. The accuracy rates for each tag vary:
@@ -38,7 +41,7 @@ Using the sensitivity matrix shown in the heatmap, we can determine the importan
 # About the framework we used
 
 Most of the codebase is from NCRF++: An Open-source Neural Sequence Labeling Toolkit. The reference for it follows.
-**Note:** Not planning to leave the whole NCRF++ reference here, but just for now to use as a template for our own readme.
+<!-- **Note:** Not planning to leave the whole NCRF++ reference here, but just for now to use as a template for our own readme. -->
 
 # Reference for NCRF++: An Open-source Neural Sequence Labeling Toolkit
 * [1. Introduction](#Introduction)
