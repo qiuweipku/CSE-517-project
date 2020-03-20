@@ -13,20 +13,22 @@ We're working on a replication of results from the following paper:
 -->
 # Usage
 We added code for calculating sensitivity, importance rankings, accuracies, ablating neurons, similarity, and overlap.
-* [1. Train](#Train)
+* [1. Train](#Train-and-test)
 * [2. Sensitivities](#Sensitivities)
 * [3. Importance Rankings](#Importance-Rankings)
 * [4. Accuracies](#Accuracies)
 * [5. Ablating neurons](#Ablating-neurons)
-* [6. Similarity](#Similarity)
-* [7. Overlap](#Overlap)
+* [6. Correlations](#Correlations)
+* [7. Similarity](#Similarity)
+* [8. Overlap](#Overlap)
 
+## Train and test
 **Train**: Training the model from the paper takes about 10 minutes. To train a model, edit a config file (an example is test.train.config), so that `model_dir` indicating the path and beginning of the filename to where you want to save your trained model. For example, `model_dir=test_data/lstmtest50` will save the model in the file `test_data/lstmtest50.9.model` (the 9 is for the 10th epoch of training starting at index 0 so that's why it's 9 and not 10). The config file consumes some preprocessed data we put in the `test_data` directory.
 
 Then run:
 > python3 main.py --config test.train.config 
 
-**Get data**: To run some of the evaluations that get data for our charts, run (change --pretrainedmodelpath to match what you set in the config file, plus ".9.model".:
+**Test**: To run some of the evaluations that get data for our charts, run (change --pretrainedmodelpath to match what you set in the config file, plus ".9.model".:
 > python3 main.py --config test.train.config --loadtotest True --pretrainedmodelpath "test_data/lstmtest50.9.model" --ablate 0
 
 ## Sensitivities
@@ -64,13 +66,14 @@ The axes of the heatmaps list the NER tags that the model was trying to label. T
 
 > python3 main.py --config test.train.config --loadtotest True --pretrainedmodelpath "test_data/lstmtest50.9.model" --ablate 10
 
+## Correlations
+To calculate the correlations between the neuron sensitivitities for models with different random seeds, you can use the code in `utils/corr.py` or in `correlation_plotting.ipynb`. This will save the correlation heatmap to '/test_data/lstmtestglove50.9.model_sensitivities_correlation.png'. You can change that path to whereever you saved the trained model.
 
-
-# Similarity
-In an experiment beyond what the paper did, we measure the cosine similarity between learned weights for a pair of labels in the fully-connected layer of the model to see if there's correlation between models with different random seeds and with ablation patterns. The code for this is in `weight-similarity.py`. The weights this function uses are saved after you train the model in `weights.npy`.
+## Similarity
+In an experiment beyond what the paper did, we measure the cosine similarity between learned weights for a pair of labels in the fully-connected layer of the model to see if there's correlation between models with different random seeds and with ablation patterns. The code for this is in `utils/weight-similarity.py`. The weights this function uses are saved after you train the model in `weights.npy`.
 
 ## Overlap
-In an experiment beyond what the paper did, we measure the shared neurons in the top-ten most-important neurons of a pair of labels in the model to see if there's correlation between models with different random seeds and with ablation patterns. The code for this is in `overlap()` in `weight-similarity.py`.
+In an experiment beyond what the paper did, we measure the shared neurons in the top-ten most-important neurons of a pair of labels in the model to see if there's correlation between models with different random seeds and with ablation patterns. The code for this is in `overlap()` in `utils/weight-similarity.py`.
 
 ## About the framework we used
 
