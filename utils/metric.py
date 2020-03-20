@@ -10,7 +10,7 @@ from __future__ import print_function
 import sys
 
 
-def get_per_tag_accuracy(expected_tag_counts, actual_tag_counts, sort=False):
+def get_per_tag_accuracy(expected_tag_counts, actual_tag_counts, sort=False, data=None):
     '''
 
     :param expected_tag_counts: A dict created in get_ner_fmeasure()
@@ -18,23 +18,30 @@ def get_per_tag_accuracy(expected_tag_counts, actual_tag_counts, sort=False):
     :param sort: True to sort alphabetically by key
     :return: dict containing the accuracies for each tag
     '''
-    per_tag_acc = {}
-    for tag in expected_tag_counts:
-        per_tag_acc[tag] = actual_tag_counts[tag]/expected_tag_counts[tag]
-    if sort:
-        for tag in sorted(per_tag_acc):
-            print("\t{}: {:.3f}".format(tag, per_tag_acc[tag]))
-        for tag in per_tag_acc:
-            print(per_tag_acc[tag])
-    else:
-        for tag in per_tag_acc:
-            print("\t{}: {:.3f}".format(tag, per_tag_acc[tag]))
-        for tag in per_tag_acc:
-            print("{:.3f}".format(per_tag_acc[tag]))
+    # if data:
+    #     if data.ablate_num:
+    with open(str(data.ablate_num)+"_acc.txt", 'w+') as acc_file:
+        per_tag_acc = {}
+        for tag in expected_tag_counts:
+            per_tag_acc[tag] = actual_tag_counts[tag]/expected_tag_counts[tag]
+        if sort:
+            for tag in sorted(per_tag_acc):
+                print("\t{}: {:.3f}".format(tag, per_tag_acc[tag]))
+                acc_file.write("\t{}: {:.3f}\n".format(tag, per_tag_acc[tag]))
+            # for tag in per_tag_acc:
+            #     # print(per_tag_acc[tag])
+            #     acc_file.write("\t{}: {:.3f}".format(tag, per_tag_acc[tag]))
+        else:
+            for tag in per_tag_acc:
+                print("\t{}\t{:.3f}".format(tag, per_tag_acc[tag]))
+                acc_file.write("\t{}\t{:.3f}\n".format(tag, per_tag_acc[tag]))
+            # for tag in per_tag_acc:
+            #     print("{:.3f}".format(per_tag_acc[tag]))
+            #     acc_file.write("\t{}: {:.3f}\n".format(tag, per_tag_acc[tag]))
     return per_tag_acc
 
 ## input as sentence level labels
-def get_ner_fmeasure(golden_lists, predict_lists, label_type="BMES"):
+def get_ner_fmeasure(golden_lists, predict_lists, label_type="BMES", data=None):
     sent_num = len(golden_lists)
     golden_full = []
     predict_full = []
@@ -83,7 +90,7 @@ def get_ner_fmeasure(golden_lists, predict_lists, label_type="BMES"):
         f_measure = 2*precision*recall/(precision+recall)
 
     ''' Prints out the accuracy for all tags '''
-    get_per_tag_accuracy(expected_tag_counts, actual_tag_counts)
+    get_per_tag_accuracy(expected_tag_counts, actual_tag_counts, data=data)
     ''' Accuracy for all tags '''
     accuracy = (right_tag+0.0)/all_tag
 
@@ -91,9 +98,10 @@ def get_ner_fmeasure(golden_lists, predict_lists, label_type="BMES"):
     if  label_type.upper().startswith("B-"):
         print("gold_num = ", golden_num, " pred_num = ", predict_num, " right_num = ", right_num)
     else:
-        print("{:.3f}".format(accuracy))
-        print("Right token = ", right_tag, " All token = ", all_tag, " acc = ", accuracy)
         print("\t{}\t{:.3f}".format('ALL', accuracy))
+        print("Right token = ", right_tag, " All token = ", all_tag, " acc = ", accuracy)
+        with open(str(data.ablate_num) + "_acc.txt", 'a') as acc_file:
+            acc_file.write("\t{}\t{:.3f}\n".format('ALL', accuracy))
     return accuracy, precision, recall, f_measure
 
 

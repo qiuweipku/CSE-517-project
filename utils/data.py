@@ -126,7 +126,7 @@ class Data:
         ## sensitivity testing
         self.test_name = None
         self.ablate_list = []
-        self.ablate_num = []
+        self.ablate_num = 0
         self.weights_saved = False
         self.weights = []
 

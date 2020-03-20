@@ -129,11 +129,22 @@ class WordSequence(nn.Module):
 
         ''' Ablation of neurons '''
         ## this is the feature_order of a tag like B-ORG, you can change it to what you get.
+        # g_50
         feature_order = \
             [44, 12, 32, 0, 28, 34, 14, 40, 16, 43, 42, 35, 41, 36, 7, 47, 49, 5, 1, 31, 24, 8, 6, 23, 22, 37, 10, 39,
              27, 26, 25, 13, 48, 46, 21, 18, 38, 9, 17, 33, 20, 4, 19, 29, 11, 2, 15, 3, 45, 30]
+
+        # b-org g_100
+        '''
+        feature_order = \
+            [7, 41, 49, 39, 2, 17, 33, 10, 31, 34, 29, 23, 15, 27, 24, 47, 44, 42, 30, 22, 21, 11, 0, 12, 4, 8, 20, 9,
+             5, 48, 19, 45, 32, 43, 3, 35, 36, 25, 13, 16, 37, 38, 28, 46, 14, 18, 6, 26, 1, 40]
+        '''
         mask_np = np.ones(feature_out.shape)
-        mask_np[:, :, feature_order[0:0]] = 0   ## For 1st 25, mask_np[:, :, feature_order[0:25]] = 0
+        if self.data.ablate_num > 0:
+            mask_np[:, :, feature_order[0:self.data.ablate_num]] = 0   ## For 1st 25, mask_np[:, :, feature_order[0:25]] = 0
+        else:
+            mask_np[:, :, feature_order[0:0]] = 0   ## For 1st 25, mask_np[:, :, feature_order[0:25]] = 0
 
         mask_tensor = torch.from_numpy(mask_np)
         mask_tensor = torch.tensor(mask_tensor, dtype=torch.float32)
