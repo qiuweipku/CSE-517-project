@@ -70,13 +70,13 @@ The axes of the heatmaps list the NER tags that the model was trying to label. T
 To calculate the correlations between the neuron sensitivitities for models with different random seeds, you can use the code in `utils/corr.py` or in `correlation_plotting.ipynb`. This will save the correlation heatmap to '/test_data/lstmtestglove50.9.model_sensitivities_correlation.png'. You can change that path to whereever you saved the trained model.
 
 ## Similarity
-In an experiment beyond what the paper did, we measure the cosine similarity between learned weights for a pair of labels in the fully-connected layer of the model to see if there's correlation between models with different random seeds and with ablation patterns. The code for this is in `utils/weight-similarity.py`. The weights this function uses are saved after you train the model in `weights.npy`.
+In an experiment beyond what the paper did, we measure the cosine similarity between learned weights for a pair of labels in the fully-connected layer of the model to see if there's correlation between models with different random seeds and with ablation patterns. The code for this is in `utils/weight-similarity.py`. The weights this function uses are saved in `weights.npy` after you train the model.
 
 ## Overlap
 In an experiment beyond what the paper did, we measure the shared neurons in the top-ten most-important neurons of a pair of labels in the model to see if there's correlation between models with different random seeds and with ablation patterns. The code for this is in `overlap()` in `utils/weight-similarity.py`.
 
-## Preprocessing
-We have preprocessing code in `preprocessing.ipynb` if you want to use it. We processed some additional datasets which are in subfolders of the `data` directory.
+## Preprocessing additional datasets
+The preprocessing code in `preprocessing.ipynb` could be used for additional datasets. We processed some additional datasets which are in subfolders of the `data` directory. Our future plans include running experiments on these datasets.
 
 ## About the framework we used
 
