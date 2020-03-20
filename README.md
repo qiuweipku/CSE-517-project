@@ -6,34 +6,36 @@
 We're working on a replication of results from the following paper:
 
 > Xin, J., Lin, J., & Yu, Y. (2019, November). What Part of the Neural Network Does This? Understanding LSTMs by Measuring and Dissecting Neurons. In Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing and the 9th International Joint Conference on Natural Language Processing (EMNLP-IJCNLP) (pp. 5827-5834).
-
-# How to run our code
-
-**Train**: Training the model from the paper takes about 10 minutes. To train a model, edit a config file (an example is test.train.config), so that `model_dir` indicating the path and beginning of the filename to where you want to save your trained model. For example, `model_dir=test_data/lstmtest50` will save the model in the file `test_data/lstmtest50.9.model` (the 9 is for the 10th epoch of training starting at index 0 so that's why it's 9 and not 10).
+<!--
+* [1. Usage](#Usage)
+* [2. Code](#Code)
+* [3. Conclusions](#Conclusions)
+# Usage
+-->
+**Train**: Training the model from the paper takes about 10 minutes. To train a model, edit a config file (an example is test.train.config), so that `model_dir` indicating the path and beginning of the filename to where you want to save your trained model. For example, `model_dir=test_data/lstmtest50` will save the model in the file `test_data/lstmtest50.9.model` (the 9 is for the 10th epoch of training starting at index 0 so that's why it's 9 and not 10). The config file consumes some preprocessed data we put in the `test_data` directory.
 
 Then run:
 > python3 main.py --config test.train.config 
 
-**Get data**: To run evaluations that get data for our charts, run (change --pretrainedmodelpath to match what you set in the config file, plus ".9.model":
+**Get data**: To run some of the evaluations that get data for our charts, run (change --pretrainedmodelpath to match what you set in the config file, plus ".9.model".:
 > python3 main.py --config test.train.config --loadtotest True --pretrainedmodelpath "test_data/lstmtest50.9.model" --ablate 0
 
-The console output should show some accuracies. These are the accuracies we use to generate charts like the one ![comparing embeddings](readme/B-ORG-embedding-compare.png) showing how accuracy degrades over when you ablate important neurons.
-
-A heatmap is also generated in the same directory as the model. Here is a sensitivity heatmap for 50 neurons and nine BIO labels. It was generated in `heatmap_sensitivity()` in `main.py`.
-
+## Sensitivities
+**Sensitivity heatmap** is generated in the `/test_data` directory (or whereever you specified in the config file) and has a name like `lstmtest50.9.model_heatmap.png`. There's also a `lstmtest50.9.model_heatmap.npy` used to calculate correlations between models. Here is a sensitivity heatmap for 50 neurons and nine BIO labels. It was generated in `heatmap_sensitivity()` in `main.py`.
 ![Example heatmap](readme/heatmap.png)
 
-<!--
 If you change the random seed (find `seed_num = 42` in `main.py`, change it and train another model), you'll get a different heatmap. Here's the heatmap for a model with the same parameters but a different random seed as the previous one:
-
+Notice that it's different, and the range of values may be different. But there are some similarities too.
 ![Example heatmap](readme/heatmap2.png)
 
 
-Notice that it's different, and the range of values may be different. But there are some similarities too.
--->
+## Importance rankings
+**Importance rankings** are generated in files `ImportanceRankings.png`, `Importance.txt`, `Importance.tsv`, and `imps.npy`. The last one is used to calculate *overlap*.
 
-# NER task
-The axes of the heatmaps list the NER tags that the model was trying to label. The accuracy rates for each tag vary:
+## Accuracies
+**Accuracies** The console output should show some accuracies. These are the accuracies we use to generate charts like the one ![comparing embeddings](readme/B-ORG-embedding-compare.png) showing how accuracy degrades over when you ablate important neurons. These are also written to files in the root directory with names like `n_acc.txt` for accuracy when you ablate n neurons. 
+
+The axes of the heatmaps list the NER tags that the model was trying to label. The accuracy rates for each tag vary, for example they might look like:
 
 	B-LOC: 0.9069134458356015
 	B-MISC: 0.702819956616052
@@ -44,6 +46,17 @@ The axes of the heatmaps list the NER tags that the model was trying to label. T
 	I-ORG: 0.6125166444740346
 	I-PER: 0.9563886763580719
 	O: 0.995927770279704
+
+## Ablating neurons
+**Ablating neurons** The `--ablate` flag specifies how many neurons to ablate. You get the list of neurons to ablate from the importance ranking files or the console output, for a specified tag like B-ORG or I-MISC. Paste this list into `forward()` in `wordsequence.py` where we have a comment about `"Ablation of neurons"` for the value of `feature order`, and then run a command like the following which specifies that you want to ablate the top ten neurons.
+
+> python3 main.py --config test.train.config --loadtotest True --pretrainedmodelpath "test_data/lstmtest50.9.model" --ablate 10
+
+
+
+
+
+
 
 # Importance ranking of neurons
 Using the sensitivity matrix shown in the heatmap, we can determine the importance ranking of the each neuron and list them from most to least important.
