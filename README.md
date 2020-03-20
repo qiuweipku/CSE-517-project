@@ -52,21 +52,21 @@ The axes of the heatmaps list the NER tags that the model was trying to label. T
 
 > python3 main.py --config test.train.config --loadtotest True --pretrainedmodelpath "test_data/lstmtest50.9.model" --ablate 10
 
-
-
-
-
-
-
 # Importance ranking of neurons
 Using the sensitivity matrix shown in the heatmap, we can determine the importance ranking of the each neuron and list them from most to least important.
 
 ![Importance ranking](readme/importance.png)
 
+# Similarity
+In an experiment beyond what the paper did, we measure the cosine similarity between learned weights for a pair of labels in the fully-connected layer of the model to see if there's correlation between models with different random seeds and with ablation patterns. The code for this is in `weight-similarity.py`. The weights this function uses are saved after you train the model in `weights.npy`.
+
+# Overlap
+In an experiment beyond what the paper did, we measure the shared neurons in the top-ten most-important neurons of a pair of labels in the model to see if there's correlation between models with different random seeds and with ablation patterns. The code for this is in `overlap()` in `weight-similarity.py`.
+
 # About the framework we used
 
 Most of the codebase is from NCRF++: An Open-source Neural Sequence Labeling Toolkit. The reference for it follows.
-<!-- **Note:** Not planning to leave the whole NCRF++ reference here, but just for now to use as a template for our own readme. -->
+<!-- **Note:** Not planning to leave the whole NCRF++ reference here, but just for now to use as a guide for our own readme. -->
 
 # Reference for NCRF++: An Open-source Neural Sequence Labeling Toolkit
 * [1. Introduction](#Introduction)
