@@ -23,6 +23,11 @@ We added code for calculating sensitivity, importance rankings, accuracies, abla
 * [9. Preprocessing](#preprocessing)
 
 ## Train and test
+> **Note:** A prerequisite for training the model is the GloVe embeddings. You need to get them from
+> https://nlp.stanford.edu/projects/glove/ and put `glove.6B.zip` in the directory `test_data`. Then you can set
+> `word_emb_dir` in `test.train.config` to point to `test_data/glove.6B.zip/glove.6B.50d.txt` to use 50-dimensional embeddings, or 
+> `test_data/glove.6B.zip/glove.6B.100d.txt` to use 100-dimensional embeddings.
+
 **Train**: Training the model from the paper takes about 10 minutes. To train a model, edit a config file (an example is test.train.config), so that `model_dir` indicating the path and beginning of the filename to where you want to save your trained model. For example, `model_dir=test_data/lstmtest50` will save the model in the file `test_data/lstmtest50.9.model` (the 9 is for the 10th epoch of training starting at index 0 so that's why it's 9 and not 10). The config file consumes some preprocessed data we put in the `test_data` directory.
 
 Then run:
@@ -73,12 +78,13 @@ To calculate the correlations between the neuron sensitivitities for models with
 In an experiment beyond what the paper did, we measure the cosine similarity between learned weights for a pair of labels in the fully-connected layer of the model to see if there's correlation between models with different random seeds and with ablation patterns. The code for this is in `utils/weight-similarity.py`. The weights this function uses are saved in `weights.npy` after you train the model.
 
 ## Overlap
-In an experiment beyond what the paper did, we measure the shared neurons in the top-ten most-important neurons of a pair of labels in the model to see if there's correlation between models with different random seeds and with ablation patterns. The code for this is in `overlap()` in `utils/weight-similarity.py`.
+In an experiment beyond what the paper did, we measure the shared neurons in the top-ten most-important neurons of a pair of labels in the model to see if there's correlation between models with different random seeds and with ablation patterns. The code for this is in `overlap()` in `utils/weight-similarity.py`. An example of the values for different pairs of labels is shown here in the `Importance_overlap_top_ten.png` file that we generate:
+![Importance overlap](readme/Importance_overlap_top_ten.png)
 
 ## Preprocessing additional datasets
 The preprocessing code in `preprocessing.ipynb` could be used for additional datasets. We processed some additional datasets which are in subfolders of the `data` directory. Our future plans include running experiments on these datasets.
 
-## About the framework we used
+# About the framework we used
 
 Most of the codebase is from NCRF++: An Open-source Neural Sequence Labeling Toolkit. The reference for it follows.
 <!-- **Note:** Not planning to leave the whole NCRF++ reference here, but just for now to use as a guide for our own readme. -->
