@@ -6,10 +6,11 @@
 We're working on a replication of results from the following paper:
 
 > Xin, J., Lin, J., & Yu, Y. (2019, November). What Part of the Neural Network Does This? Understanding LSTMs by Measuring and Dissecting Neurons. In Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing and the 9th International Joint Conference on Natural Language Processing (EMNLP-IJCNLP) (pp. 5827-5834).
-<!--
+
 * [1. Usage](#Usage)
-* [2. Next steps](#Next steps)
--->
+* [2. Findings](#Findings)
+* [3. About the Framework](#About-the-Framework-We-used)
+
 # Usage
 We added code for calculating sensitivity, importance rankings, accuracies, ablating neurons, correlations, similarity, overlap, as well as preprocessing the dataset.
 * [1. Train](#Train-and-test)
@@ -83,6 +84,24 @@ In an experiment beyond what the paper did, we measure the shared neurons in the
 
 ## Preprocessing additional datasets
 The preprocessing code in `preprocessing.ipynb` could be used for additional datasets. We processed some additional datasets which are in subfolders of the `data` directory. Our future plans include running experiments on these datasets.
+
+# Findings
+We observe the following results for **sensitivity** correlation that are consistent with the original paper:
+* Label pairs of the form B-x and I-x (where x
+is PER/LOC/ORG/MISC) are generally positively
+correlated. We can observe some darkred
+2 2 blocks on the diagonal. Although for
+each trained model, it might be different neurons
+(i.e., neuron #) that encode information
+about B-x, these neurons typically also carry
+information about I-x.
+* The label triples I-LOC, I-ORG, and I-MISC
+are also positively correlated.
+* Label pairs of the form B-x and I-y (where
+x and y are different entities) are generally
+negatively correlated.
+* The label O is negatively correlated with all
+I-x labels.
 
 # About the framework we used
 
