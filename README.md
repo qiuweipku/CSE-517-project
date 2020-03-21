@@ -53,19 +53,22 @@ Using the sensitivity matrix shown in the heatmap, we determine the importance r
 ![Importance ranking](readme/importance.png)
 
 ## Accuracies
-**Accuracies** The console output should show some accuracies. These are the accuracies we use to generate charts like the one ![comparing embeddings](readme/B-ORG-embedding-compare.png) showing how accuracy degrades over when you ablate important neurons. These are also written to files in the root directory with names like `n_acc.txt` for accuracy when you ablate n neurons. 
+**Accuracies** The console output should show some accuracies. These are also written to files in the root directory with names like `n_acc.txt` for accuracy when you ablate n neurons. These are the accuracies we use to generate charts like the one below:
+
+![comparing embeddings](readme/B-ORG-embedding-compare.png) 
+The chart shows how accuracy degrades over when you ablate important neurons. 
 
 The axes of the heatmaps list the NER tags that the model was trying to label. The accuracy rates for each tag vary, for example they might look like:
 
-	B-LOC: 0.9069134458356015
-	B-MISC: 0.702819956616052
-	B-ORG: 0.7225950782997763
-	B-PER: 0.9310532030401737
-	I-LOC: 0.669260700389105
-	I-MISC: 0.5549132947976878
-	I-ORG: 0.6125166444740346
-	I-PER: 0.9563886763580719
-	O: 0.995927770279704
+	B-LOC	0.9069134458356015
+	B-MISC	0.702819956616052
+	B-ORG	0.7225950782997763
+	B-PER	0.9310532030401737
+	I-LOC	0.669260700389105
+	I-MISC	0.5549132947976878
+	I-ORG	0.6125166444740346
+	I-PER	0.9563886763580719
+	O	0.995927770279704
 
 ## Ablating neurons
 **Ablating neurons** The `--ablate` flag specifies how many neurons to ablate. You get the list of neurons to ablate from the importance ranking files or the console output, for a specified tag like B-ORG or I-MISC. Paste this list into `forward()` in `wordsequence.py` where we have a comment about `"Ablation of neurons"` for the value of `feature order`, and then run a command like the following which specifies that you want to ablate the top ten neurons.
@@ -74,6 +77,8 @@ The axes of the heatmaps list the NER tags that the model was trying to label. T
 
 ## Correlations
 To calculate the correlations between the neuron sensitivitities for models with different random seeds, you can use the code in `utils/corr.py` or in `correlation_plotting.ipynb`. This will save the correlation heatmap to '/test_data/lstmtestglove50.9.model_sensitivities_correlation.png'. You can change that path to whereever you saved the trained model.
+
+![sensitivity_correlation](readme/lstmtestglove50.9.model_sensitivities_correlation.png)
 
 ## Similarity
 In an experiment beyond what the paper did, we measure the cosine similarity between learned weights for a pair of labels in the fully-connected layer of the model to see if there's correlation between models with different random seeds and with ablation patterns. The code for this is in `utils/weight-similarity.py`. The weights this function uses are saved in `weights.npy` after you train the model.
