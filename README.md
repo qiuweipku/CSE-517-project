@@ -84,6 +84,7 @@ We describe what the correlations show in [Findings](#Findings).
 
 ## Similarity
 In an experiment beyond what the paper did, we measure the cosine similarity between learned weights for a pair of labels in the fully-connected layer of the model to see if there's correlation between models with different random seeds and with ablation patterns. The code for this is in `utils/weight-similarity.py`. The weights this function uses are saved in `weights.npy` after you train the model.
+
 ![Similarity](readme/Similarity_correlation.png)
 
 ## Overlap
@@ -110,6 +111,15 @@ x and y are different entities) are generally
 negatively correlated.
 * The label O is negatively correlated with all
 I-x labels.
+
+We observe the following results for **similarity** between labels based on the vector of learned weights in the fully-connected layer:
+* Label pairs of the form B-x and I-x (where x
+is PER/LOC/ORG/MISC) are **not** the most similar. 
+* The label triples I-LOC, I-ORG, and I-MISC
+are similar.
+* Labels of the form B-x are more similar to labels B-y than to label I-x (where
+x and y are different entities), except in the case of B-PER and I-PER, which are similar.
+* The label O is dissimilar to most labels but the closest to I-MISC.
 
 # About the framework we used
 
