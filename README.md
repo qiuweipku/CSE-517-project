@@ -76,12 +76,16 @@ The axes of the heatmaps list the NER tags that the model was trying to label. T
 > python3 main.py --config test.train.config --loadtotest True --pretrainedmodelpath "test_data/lstmtest50.9.model" --ablate 10
 
 ## Correlations
-To calculate the correlations between the neuron sensitivitities for models with different random seeds, you can use the code in `utils/corr.py` or in `correlation_plotting.ipynb`. This will save the correlation heatmap to '/test_data/lstmtestglove50.9.model_sensitivities_correlation.png'. You can change that path to whereever you saved the trained model.
+To calculate the correlations between the neuron sensitivitities for models with different random seeds, you can use the code in `utils/corr.py` or in `correlation_plotting.ipynb`. This will save the correlation heatmap to '/test_data/lstmtestglove50.9.model_sensitivities_correlation.png'. You can change that path to whereever you saved the trained model. The following image is the sensitivity correlation matrix for one of the models we tested:
 
 ![sensitivity_correlation](readme/lstmtestglove50.9.model_sensitivities_correlation.png)
 
+We describe what the correlations show in [Findings](#Findings).
+
 ## Similarity
 In an experiment beyond what the paper did, we measure the cosine similarity between learned weights for a pair of labels in the fully-connected layer of the model to see if there's correlation between models with different random seeds and with ablation patterns. The code for this is in `utils/weight-similarity.py`. The weights this function uses are saved in `weights.npy` after you train the model.
+
+![Similarity](readme/Similarity_correlation.png)
 
 ## Overlap
 In an experiment beyond what the paper did, we measure the shared neurons in the top-ten most-important neurons of a pair of labels in the model to see if there's correlation between models with different random seeds and with ablation patterns. The code for this is in `overlap()` in `utils/weight-similarity.py`. An example of the values for different pairs of labels is shown here in the `Importance_overlap_top_ten.png` file that we generate:
@@ -107,6 +111,15 @@ x and y are different entities) are generally
 negatively correlated.
 * The label O is negatively correlated with all
 I-x labels.
+
+We observe the following results for **similarity** between labels based on the vector of learned weights in the fully-connected layer:
+* Label pairs of the form B-x and I-x (where x
+is PER/LOC/ORG/MISC) are **not** the most similar. 
+* The label triples I-LOC, I-ORG, and I-MISC
+are similar.
+* Labels of the form B-x are more similar to labels B-y than to label I-x (where
+x and y are different entities), except in the case of B-PER and I-PER, which are similar.
+* The label O is dissimilar to most labels but the closest to I-MISC.
 
 # About the framework we used
 
