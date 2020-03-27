@@ -38,7 +38,7 @@ torch.manual_seed(seed_num)
 np.random.seed(seed_num)
 
 def importance_matrix(sensitivities, data,
-                      print_imp=True, show_table=True):
+                      print_imp=True, show_table=True, tag_to_ablate=None):
     '''
     Builds a matrix of tag sensitivities
     :param sensitivities: This is a matrix of [num_tags, num_neurons],
@@ -80,9 +80,13 @@ def importance_matrix(sensitivities, data,
         ttl = ax.title
         ttl.set_position([0.5, 1.05])
         plt.show()
-        ax.figure.savefig("ImportanceRankings.png")
+
+        def trim_model_dir(model_dir):
+            model_dir = model_dir.replace('/','-')
+            return model_dir
+        ax.figure.savefig("ImportanceRankings-{}.png".format(trim_model_dir(data.model_dir)))
     if print_imp:
-        imp_file = open("Importance.txt", "w+")
+        imp_file = open("Importance-{}.txt".format(trim_model_dir(data.model_dir)), "w+")
         print('Neuron importance ranking for each NER tag:')
         for i, l in enumerate(important_lists):
             tags = [data.label_alphabet.get_instance(tag) for tag in sorted(data.tag_counts)]
@@ -90,7 +94,8 @@ def importance_matrix(sensitivities, data,
             print ("\t{}\t{}".format(tags[i], l))
             imp_file.write("{}\t{}\n".format(tags[i], l))
         imp_file.write("\n")
-        np.savetxt("Importance.tsv", important_nps, fmt='%2.0d', delimiter='\t')
+        np.savetxt("Importance-{}.tsv".format(trim_model_dir(data.model_dir)),
+                   important_nps, fmt='%2.0d', delimiter='\t')
 
     return important_nps
 
@@ -122,7 +127,8 @@ def heatmap_sensitivity(sensitivities,
     x_tick = [data.label_alphabet.get_instance(tag) for tag in sorted(data.tag_counts)]
     if show_pad: x_tick[0] = 'PAD'
     else: del(x_tick[0])
-    # change tags' order
+
+    # change tags' order to use in downstream correlation diagrams
     sensitivities_temp = np.zeros((50, 9))
     x_tick_output = ['B-PER', 'I-PER', 'B-LOC', 'I-LOC', 'B-ORG', 'I-ORG', 'B-MISC', 'I-MISC', 'O']
     for i in range(len(x_tick_output)):
@@ -268,8 +274,25 @@ def lr_decay(optimizer, epoch, decay_rate, init_lr):
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
-def evaluate(data, model, name, nbest=None, print_tag_counts=False):
-    print("EVALUATE file: {}, name={}".format(data.model_dir, name) )
+def evaluate(data, model, name, nbest=None, print_tag_counts=False, tag_to_ablate=None):
+    '''
+
+    :param data:
+    :param model:
+    :param name:
+    :param nbest:
+    :param print_tag_counts:
+    :param tag_to_ablate: if this is set to a tag name, like 'B-ORG', then in the LSTM layer's forward() we ablate the
+    number of neurons specified by data.ablate_num
+    :return:
+    '''
+    ablate_list_for_tag = None
+    if tag_to_ablate:
+        data.ablate_tag = tag_to_ablate
+        ablate_list_for_tag = data.ablate_list[tag_to_ablate]
+
+    print("\nEVALUATE file: {}, set={}, \n\t ablate_num={} tag: {} \nablate_list_for_tag={}".format(
+        data.model_dir, name, data.current_ablate_ind, tag_to_ablate, ablate_list_for_tag))
     if name == "train":
         instances = data.train_Ids
     elif name == "dev":
@@ -291,7 +314,7 @@ def evaluate(data, model, name, nbest=None, print_tag_counts=False):
     model.eval()
 
     ''' Get count of model parameters '''
-    print("COUNT PARAMETERS: {}".format(count_parameters(model)))
+    # print("COUNT PARAMETERS: {}".format(count_parameters(model)))
 
     batch_size = data.HP_batch_size
     start_time = time.time()
@@ -329,7 +352,7 @@ def evaluate(data, model, name, nbest=None, print_tag_counts=False):
         return speed, acc, p, r, f, nbest_pred_results, pred_scores
 
     ''' Get per-tag sensitivity '''
-    print("TOTAL BATCH ITERATIONS: {}".format(data.iteration))
+    ## print("TOTAL BATCH ITERATIONS: {}".format(data.iteration))
     sensitivity_matrices = []  # This will hold a row for each tag's sensitivity
     for tag in sorted(data.tag_counts):
         if print_tag_counts:
@@ -518,7 +541,7 @@ def batchify_sentence_classification_with_label(input_batch_list, gpu, if_train=
     return word_seq_tensor,feature_seq_tensors, word_seq_lengths, word_seq_recover, char_seq_tensor, char_seq_lengths, char_seq_recover, label_seq_tensor, mask
 
 
-def load_model_to_test(data, train=False, dev=True, test=False):
+def load_model_to_test(data, train=False, dev=True, test=False, tag=None):
     '''
     Set any ONE of train, dev, test to true, in order to evaluate on that set.
     :param data:
@@ -549,17 +572,22 @@ def load_model_to_test(data, train=False, dev=True, test=False):
             print("Speed: %.2fst/s; acc: %.4f"%(speed, acc))
 
     if (dev):
-        speed, acc, p, r, f, _,_, sensitivities = evaluate(data, model, "dev")
-        heatmap_sensitivity(sensitivities, data.pretrained_model_path, testname="dev")
-        importance_matrix(sensitivities, data)
-
-
+        # for tag in data.ablate_list:
+        speed, acc, p, r, f, _,_, sensitivities = evaluate(
+            data, model, "dev", tag_to_ablate=tag)
         if data.seg:
             current_score = f
-            print("Speed: %.2fst/s; acc: %.4f, p: %.4f, r: %.4f, f: %.4f"%(speed, acc, p, r, f))
+            print("Speed: %.2fst/s; acc: %.4f, p: %.4f, r: %.4f, f: %.4f" % (speed, acc, p, r, f))
         else:
             current_score = acc
-            print("Speed: %.2fst/s; acc: %.4f"%(speed, acc))
+            print("Speed: %.2fst/s; acc: %.4f" % (speed, acc))
+
+        if (data.ablate_num == 0):
+            heatmap_sensitivity(sensitivities, data.pretrained_model_path, testname="dev")
+            importance_matrix(sensitivities, data)
+
+
+
 
     if (test):
         speed, acc, p, r, f, _,_ = evaluate(data, model, "test")
@@ -723,7 +751,27 @@ def load_model_decode(data, name):
     return pred_results, pred_scores
 
 
+def load_ablation_file():
+    filename = ("Importance-" + data.model_dir + ".txt").replace('/','-')
+    ablate_lists = {}
+    ''' B-ORG	[4, 24, 14, 15, 19, 46, 36, 22, 27, 9, 13, 20, 25, 33, 45, 0, 35, 40, 48, 42, 44, 18, 37, 21, 32, 29, 16, 26, 11, 7, 23, 49, 12, 5, 8, 38, 2, 47, 1, 43, 31, 30, 41, 6, 28, 3, 34, 39, 10, 17]'''
+    with open(filename, 'r+') as file:
+        lines = file.readlines()
+        for line in lines:
+            line = line.strip()
+            if len(line) > 0:
+                (tag, list) = line.split('[')[0].strip(), line.split('[')[1].strip().replace(']','')
+                list = list.split(',')
+                ablate_lists[tag] = [int(i) for i in list]
+    return ablate_lists
 
+def clear_sensitivity_data():
+    data.iteration = 0
+    data.batch_contributions = []
+    data.tag_contributions = {}
+    data.tag_counts = {}
+    data.sensitivity_matrices = []
+    data.sensitivity_matrices_combined = []
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Tuning with NCRF++')
@@ -746,7 +794,7 @@ if __name__ == '__main__':
                         default=DEFAULT_TRAINED_FILE)
     parser.add_argument('--ablate', help='how many neurons to ablate', default=0) # indicate number of neurons to ablate
     # Importance.txt is generated by importance_matrix() (automatically reading this file is a TODO)
-    parser.add_argument('--ablate_file', help='list of neurons to ablate', default='Importance.txt')
+    parser.add_argument('--ablate_file', help='list of neurons to ablate')
 
     args = parser.parse_args()
     data = Data()
@@ -787,10 +835,42 @@ if __name__ == '__main__':
             print("Training model, not just testing because --loadtotest is {}".format(args.loadtotest))
             train(data)
         else:
-            print("Loading model to test.")
-            load_model_to_test(data)
             if args.ablate:
                 data.ablate_num = int(args.ablate)
+            print("Loading model to test.")
+            data.ablate_list = load_ablation_file()
+            tag_list = data.ablate_list.keys()
+            # todo: command line arg for specific current ablate index
+            # todo: command line arg for intervals
+
+            for tag in tag_list:
+                data.ablate_tag = tag
+                data.current_ablate_ind[tag] = 0
+                data.acc_chart[data.ablate_tag] = {} # clear accuracy dict of lists for the tag
+                for i in range(0, data.ablate_num + 1):
+                    data.current_ablate_ind[tag] = i #+= 1 # todo: option to skip by different interval like every 5
+                    clear_sensitivity_data()
+                    load_model_to_test(data, tag=tag)
+
+            # print out acc_chart
+            #for tag in data.ablate_list:
+                print ('{} ABLATION RESULTS:'.format(tag))
+                degradations = {}
+                for t in tag_list:
+                    print("\tTag: {}, Decr. Accs: {}".format(t, data.acc_chart[tag][t]))
+                    degradations[t] = \
+                        [data.acc_chart[tag][t][ind] - data.acc_chart[tag][t][0] for ind in range (0, data.ablate_num+1)]
+                    print("\t\tDegradation={})".format(degradations[t]))
+                    if (t==tag):
+                        # ablation tag, so use bolder symbol
+                        plt.plot(degradations[t], 'bs', label=t)
+                    else:
+                        plt.plot(degradations[t], label=t)
+
+                plt.title(tag, fontsize=18)
+                plt.legend()
+                plt.savefig("{}_chart.png".format(tag))
+                plt.clf()  # clear the plot -was plot.show()
 
     elif status == 'decode':
         print("MODEL: decode")

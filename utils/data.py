@@ -22,17 +22,18 @@ PADDING = "</pad>"
 class Data:
     def __init__(self):
         '''
-        Additions
+        Includes variables used for sensitivity and ablation
         '''
-        # can we store data here? if so, put statistics on sensitivity  here
+
+        '''
+        Additions for sensitivity calulation
+        '''
         self.iteration = 0
         self.batch_contributions = []
         self.tag_contributions = {}
         self.tag_counts = {}
         self.sensitivity_matrices = []
-
         self.sensitivity_matrices_combined = []
-
         '''
         End additions
         '''
@@ -123,12 +124,18 @@ class Data:
         self.HP_momentum = 0
         self.HP_l2 = 1e-8
 
-        ## sensitivity testing
+        ## ablation testing
         self.test_name = None
+        self.ablate_tag = ''
         self.ablate_list = []
         self.ablate_num = 0
+        self.current_ablate_ind = {} # per tag. {B_ORG: 1, B_LOC: 5, O: 2, ...}
         self.weights_saved = False
         self.weights = []
+        ## ablation chart
+        self.acc_chart = {} # dict of dicts {B_ORG: {B_ORG: .99, O: .995, ..}, O: {B_ORG: .99, ..},...}
+        ## Example of initialization elsewhere TODO: update
+        # self.acc_chart['B_ORG'] = [] # updated in get_ner_fmeasure() to save accuracy
 
     def show_data_summary(self):
         
