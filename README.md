@@ -53,10 +53,17 @@ Using the sensitivity matrix shown in the heatmap, we determine the importance r
 ![Importance ranking](readme/importance.png)
 
 ## Accuracies
-**Accuracies** The console output should show some accuracies. These are also written to files in the root directory with names like `n_acc.txt` for accuracy when you ablate n neurons. These are the accuracies we use to generate charts like the one below:
+**Accuracies** To save accuracies to files or show accuracies in the console output, set the parameters in the following functions to **True**.
+    def get_per_tag_accuracy(expected_tag_counts, actual_tag_counts, sort=False, data=None,
+        write_file=False, print_accs=False)
+	
+Accuracies are written to files in the root directory with names like `TAGn_acc.txt` for accuracy when you ablate n neurons. 
+
+We also generate charts similar to one below. An example command line with the `--ablate` argument to generate charts of ablating 10 neurons of each of the tags:
+`python main.py --config test.train.glove50.config --loadtotest True --pretrainedmodelpath "test_data/lstmtestgloveB50.9.model" --ablate 10`
 
 ![comparing embeddings](readme/B-ORG-embedding-compare.png) 
-The chart shows how accuracy degrades over when you ablate important neurons. 
+The chart shows how accuracy degrades over when you ablate important neurons. Our automatically generated charts are saved in the root directory with names like `B-ORG_chart.png`.
 
 The axes of the heatmaps list the NER tags that the model was trying to label. The accuracy rates for each tag vary, for example they might look like:
 
